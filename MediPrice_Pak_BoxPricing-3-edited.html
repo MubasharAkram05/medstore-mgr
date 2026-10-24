@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MediPrice PKR - Sales & Price Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+
+    /* =========================================================
+       MediPrice PKR — polished mobile UI/UX layer
+       Keeps the existing app logic intact while improving
+       hierarchy, touch targets, spacing and readability.
+       ========================================================= */
+    :root {
+      --mp-green: #059669;
+      --mp-green-dark: #047857;
+      --mp-teal: #0f766e;
+      --mp-ink: #172033;
+      --mp-muted: #64748b;
+      --mp-border: #e2e8f0;
+      --mp-surface: #ffffff;
+      --mp-bg: #f5f8f7;
+    }
+
+    html, body { min-height: 100%; }
+    body {
+      background: radial-gradient(circle at top, #e8f7f2 0%, #eef3f4 42%, #e9eef1 100%) !important;
+      color: var(--mp-ink);
+    }
+
+    #app-container {
+      background: var(--mp-bg) !important;
+      border-color: rgba(15,118,110,.12) !important;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, .18) !important;
+    }
+
+    #app-container > header {
+      min-height: 88px;
+      padding-top: max(16px, env(safe-area-inset-top)) !important;
+      background: linear-gradient(135deg, #047857 0%, #0f766e 58%, #115e59 100%) !important;
+      box-shadow: 0 8px 24px rgba(4,120,87,.18) !important;
+      position: relative;
+      overflow: hidden;
+    }
+    #app-container > header::after {
+      content: '';
+      position: absolute;
+      width: 150px; height: 150px;
+      right: -55px; top: -75px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      pointer-events: none;
+    }
+    #app-container > header h1 { font-size: 21px !important; letter-spacing: -.035em !important; }
+    #app-container > header p { font-size: 12px !important; opacity: .9; }
+    #header-profile-btn {
+      width: 44px; height: 44px;
+      border-radius: 14px !important;
+      background: rgba(255,255,255,.12) !important;
+      border-color: rgba(255,255,255,.18) !important;
+      backdrop-filter: blur(8px);
+      position: relative; z-index: 2;
+    }
+
+    main {
+      scroll-behavior: smooth;
+      overscroll-behavior: contain;
+    }
+
+    main > section { animation: mpFade .22s ease-out; }
+    @keyframes mpFade { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Inputs: larger touch targets + consistent focus state */
+    input, select, textarea, button { font-family: inherit; }
+    input, select, textarea { font-size: 16px !important; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(5,150,105,.65) !important;
+      box-shadow: 0 0 0 4px rgba(16,185,129,.10) !important;
+    }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:active { transform: translateY(1px); }
+
+    /* Premium pharmacy dashboard */
+    #home-dashboard { margin-bottom: 2px; }
+    .mp-dashboard-hero {
+      position:relative; overflow:hidden; min-height:112px; padding:17px 16px; border-radius:24px;
+      background:linear-gradient(135deg,#063f3b 0%,#087f6d 58%,#10a383 100%);
+      box-shadow:0 12px 28px rgba(5,118,98,.20); color:#fff;
+    }
+    .mp-hero-copy { position:relative; z-index:2; max-width:82%; }
+    .mp-eyebrow { display:inline-flex; align-items:center; gap:5px; padding:5px 8px; border-radius:999px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.14); font-size:8px; font-weight:800; letter-spacing:.09em; }
+    .mp-dashboard-hero h2 { margin:9px 0 3px; font-size:19px; line-height:1.1; letter-spacing:-.035em; font-weight:800; }
+    .mp-dashboard-hero p { margin:0; font-size:9px; color:rgba(255,255,255,.78); line-height:1.45; }
+    .mp-hero-icon { position:absolute; right:15px; top:15px; z-index:2; width:48px; height:48px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(8px); box-shadow:0 8px 20px rgba(0,0,0,.08); }
+    .mp-hero-glow { position:absolute; border-radius:999px; pointer-events:none; background:rgba(255,255,255,.10); }
+    .mp-hero-glow-1 { width:125px; height:125px; right:-55px; bottom:-65px; }
+    .mp-hero-glow-2 { width:70px; height:70px; left:48%; top:-42px; opacity:.6; }
+    .mp-stat-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:9px; }
+    .mp-stat-card { min-width:0; display:flex; align-items:center; gap:9px; padding:10px; border-radius:17px; background:rgba(255,255,255,.97); border:1px solid #e4ecea; box-shadow:0 5px 15px rgba(15,23,42,.045); }
+    .mp-stat-icon { flex:0 0 31px; width:31px; height:31px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+    .mp-stat-card span { display:block; font-size:8px; color:#7b8794; font-weight:700; line-height:1.1; }
+    .mp-stat-card strong { display:block; margin-top:3px; font-size:14px; line-height:1; color:#172033; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mp-stat-green .mp-stat-icon { background:#e8f8f1; color:#059669; }
+    .mp-stat-blue .mp-stat-icon { background:#edf5ff; color:#3b82f6; }
+    .mp-stat-amber .mp-stat-icon { background:#fff7e8; color:#d97706; }
+    .mp-stat-teal .mp-stat-icon { background:#e8fbf8; color:#0f766e; }
+    @media (max-width:360px) {
+      .mp-dashboard-hero { min-height:104px; padding:14px; border-radius:21px; }
+      .mp-dashboard-hero h2 { font-size:17px; }
+      .mp-hero-icon { width:42px; height:42px; border-radius:13px; }
+      .mp-stat-card { padding:8px; gap:7px; }
+      .mp-stat-icon { width:28px; height:28px; flex-basis:28px; }
+      .mp-stat-card strong { font-size:12px; }
+    }
+
+    /* Search area */
+    #search-input, #calc-search-input {
+      min-height: 48px;
+      border-radius: 16px !important;
+      border-color: #dbe5e2 !important;
+      box-shadow: 0 5px 18px rgba(15,23,42,.05) !important;
+    }
+    #search-input { background: rgba(255,255,255,.98) !important; height:52px !important; border:1px solid #dce9e5 !important; }
+    #category-pills button, #form-filter-row button {
+      min-height: 36px;
+      border-radius: 999px !important;
+      padding-left: 13px !important;
+      padding-right: 13px !important;
+      font-weight: 700 !important;
+      white-space: nowrap;
+      border: 1px solid #e2e8f0;
+    }
+    #category-pills {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #category-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* List cards */
+    #medicine-list { gap: 10px !important; }
+    #medicine-list > div:not(.text-center) {
+      border-color: #e4ebe9 !important;
+      border-radius: 18px !important;
+      padding: 12px !important;
+      box-shadow: 0 5px 18px rgba(15,23,42,.055) !important;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    #medicine-list > div:not(.text-center):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(15,23,42,.09) !important;
+      border-color: rgba(16,185,129,.30) !important;
+    }
+    #medicine-list img, #medicine-list > div:not(.text-center) [class*="rounded-xl"] { border-radius: 14px !important; }
+
+
+    /* Rich medicine cards */
+    #medicine-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; align-items: stretch; }
+    .mp-medicine-card {
+      position: relative; overflow: hidden; min-width: 0; background: rgba(255,255,255,.98);
+      border: 1px solid #e4eeeb; border-radius: 22px; padding: 10px;
+      box-shadow: 0 8px 24px rgba(15,23,42,.065), 0 2px 5px rgba(15,23,42,.035);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      display:flex; flex-direction:column;
+    }
+    .mp-medicine-card:hover { transform: translateY(-2px); border-color:#b8e7d8; box-shadow:0 14px 30px rgba(15,23,42,.10); }
+    .mp-card-glow { position:absolute; width:85px; height:85px; left:-40px; top:-42px; border-radius:50%; background:linear-gradient(135deg,#34d399,#059669); opacity:.13; pointer-events:none; }
+    .mp-card-top { display:flex; align-items:center; gap:6px; min-height:24px; position:relative; z-index:2; }
+    .mp-more { margin-left:auto; color:#64748b; }
+    .mp-form-badge { display:inline-flex; align-items:center; justify-content:center; padding:4px 8px; border-radius:999px; font-size:9px; line-height:1; font-weight:800; white-space:nowrap; }
+    .mp-product-image { height:92px; margin:3px 0 6px; border-radius:16px; background:linear-gradient(145deg,#f4faf8,#eef5f3); border:1px solid #e5efed; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .mp-product-image img { width:100%; height:100%; object-fit:contain; padding:7px; filter:drop-shadow(0 5px 7px rgba(15,23,42,.10)); }
+    .mp-image-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px; color:#059669; }
+    .mp-image-placeholder span { font-size:10px; font-weight:900; }
+    .mp-card-info { min-width:0; }
+    .mp-card-info h3 { margin:0; font-size:12px; line-height:1.25; font-weight:800; color:#172033; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mp-generic { margin:3px 0 5px; font-size:9px; line-height:1.25; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mp-tabs-pill { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; background:#eaf2fa; color:#4b647f; font-size:9px; font-weight:800; }
+    .mp-price-row { display:flex; align-items:center; gap:6px; margin-top:8px; padding:6px; border-radius:14px; background:linear-gradient(90deg,#ecfdf5,#f5fffc); border:1px solid #d7f3e8; }
+    .mp-price-main { min-width:0; display:flex; align-items:center; gap:5px; flex:1; }
+    .mp-price-icon { width:24px; height:24px; border-radius:8px; background:#fff; color:#059669; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(5,150,105,.10); flex-shrink:0; }
+    .mp-price-main div { min-width:0; }
+    .mp-price-main strong { display:block; font-size:11px; color:#047857; line-height:1.1; white-space:nowrap; }
+    .mp-price-main small { display:block; font-size:8px; color:#6aa996; line-height:1.1; margin-top:2px; }
+    .mp-calc-btn { flex-shrink:0; border:0; border-radius:999px; background:#dff8ef; color:#047857; font-size:9px; font-weight:800; padding:7px 8px; display:flex; align-items:center; gap:4px; }
+    .mp-calc-btn:active { background:#c7f1e2; }
+    .mp-card-footer { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:6px; min-width:0; }
+    .mp-stock,.mp-box-price { font-size:8px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mp-stock { display:flex; align-items:center; gap:3px; }
+    .mp-stock b { color:#334155; }
+    .mp-stock.low,.mp-stock.low b { color:#dc2626; }
+    .mp-box-price { color:#0f766e; font-weight:700; text-align:right; }
+    .mp-card-action-row { display:flex; justify-content:flex-end; margin:8px 0 2px; } .mp-calc-btn-compact { min-height:34px; padding:0 12px; border-radius:11px; } .mp-tabs-pill, .mp-price-row, .mp-card-footer { display:none !important; }
+    .mp-sell-btn { margin-top:7px; width:100%; border:0; border-radius:11px; background:#059669; color:#fff; padding:7px 8px; font-size:9px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow:0 4px 10px rgba(5,150,105,.18); }
+    .mp-sell-btn:active { background:#047857; }
+    .mp-select-wrap { position:absolute; top:8px; left:8px; z-index:5; }
+    .mp-card-selected { border-color:#10b981; box-shadow:0 0 0 2px rgba(16,185,129,.15),0 10px 24px rgba(5,150,105,.10); }
+    @media (max-width:360px) {
+      #medicine-list { gap:8px !important; }
+      .mp-medicine-card { padding:8px; border-radius:18px; }
+      .mp-product-image { height:78px; }
+      .mp-calc-btn { padding:7px 10px; }
+      .mp-price-main strong { font-size:10px; }
+    }
+
+    /* Screen headings */
+    #screen-add > div:first-child,
+    #screen-stats > div:first-child,
+    #screen-calc > div:first-child {
+      padding-top: 3px;
+    }
+    #screen-add h2, #screen-stats h2, #screen-calc h2 { letter-spacing: -.025em; }
+
+    /* Calculator: compact, easy-to-scan 2-column pricing inputs */
+    #screen-calc .bg-emerald-50 > .space-y-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    #screen-calc .bg-emerald-50 > .space-y-3 > div:nth-child(5) { grid-column: 1 / -1; }
+    #screen-calc .bg-emerald-50 > .space-y-3 > div > label { min-height: 18px; display:block; }
+    #screen-calc .bg-emerald-50 > .space-y-3 input {
+      min-height: 50px;
+      border-radius: 14px !important;
+    }
+    #screen-calc .bg-emerald-50 {
+      border-radius: 22px !important;
+      box-shadow: 0 8px 26px rgba(16,185,129,.08) !important;
+    }
+    #calc-unit-price {
+      font-size: 21px !important;
+      letter-spacing: -.02em;
+    }
+
+    /* Add/edit pricing block */
+    #screen-add .bg-emerald-50\/70 {
+      border-radius: 20px !important;
+      box-shadow: 0 6px 22px rgba(16,185,129,.06);
+    }
+    #screen-add .bg-emerald-50\/70 input,
+    #screen-add .bg-emerald-50\/70 select { min-height: 46px; }
+    #screen-add #med-tablet-price { font-size: 17px !important; }
+
+    /* Profile/stat cards */
+    #screen-profile > div, #screen-stats > div:not(.hidden) {
+      border-radius: 20px !important;
+    }
+
+    /* Bottom navigation */
+    #app-container > nav {
+      min-height: 68px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+      padding-top: 8px !important;
+      background: rgba(255,255,255,.94) !important;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 -8px 28px rgba(15,23,42,.08);
+      border-top-color: rgba(226,232,240,.9) !important;
+    }
+    #app-container > nav button { min-width: 54px; min-height: 46px; }
+    #app-container > nav button span { font-weight: 700; }
+    #app-container > nav button > div {
+      box-shadow: 0 8px 18px rgba(5,150,105,.28) !important;
+    }
+
+    /* Modals */
+    #sell-modal > div, #details-modal > div, #backup-modal > div {
+      box-shadow: 0 25px 70px rgba(15,23,42,.25) !important;
+      border: 1px solid rgba(226,232,240,.9);
+    }
+    #sell-modal > div, #details-modal > div { border-radius: 26px 26px 0 0 !important; }
+
+    /* Better tap targets for icon-only controls */
+    #clear-search, #clear-calc-search { width: 40px; height: 40px; display:flex; align-items:center; justify-content:center; }
+    #clear-search.hidden, #clear-calc-search.hidden { display:none !important; }
+
+    @media (min-width: 768px) {
+      #app-container { max-width: 470px; }
+      #app-container > nav { border-radius: 0 0 24px 24px; }
+    }
+    @media (max-width: 360px) {
+      #screen-calc .bg-emerald-50 > .space-y-3 { gap: 8px; }
+    }
+
+  
+
+    /* Premium Home/List refresh — inspired by the approved pharmacy dashboard direction */
+    #screen-home { background: linear-gradient(180deg,#f7fbfa 0%,#f1f7f5 100%); }
+    #screen-home > .space-y-3 { gap: 12px !important; }
+    .mp-dashboard-hero {
+      min-height: 102px; padding: 16px 15px; border-radius: 25px;
+      background: linear-gradient(135deg,#087f6d 0%,#059669 58%,#16a34a 100%);
+      box-shadow: 0 14px 30px rgba(5,118,98,.20);
+    }
+    .mp-dashboard-hero::after { content:""; position:absolute; width:170px; height:170px; right:-68px; bottom:-105px; border-radius:50%; background:rgba(255,255,255,.10); }
+    .mp-eyebrow { background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.20); font-size:8px; padding:5px 9px; }
+    .mp-dashboard-hero h2 { font-size:20px; margin-top:8px; }
+    .mp-dashboard-hero p { font-size:10px; max-width:230px; }
+    .mp-dashboard-hero .mp-hero-icon { width:46px; height:46px; border-radius:15px; background:rgba(255,255,255,.14); }
+    .mp-dashboard-strip {
+      position:relative; overflow:hidden; display:flex; align-items:center; gap:10px;
+      margin-top:9px; padding:10px 12px; min-height:68px; border-radius:19px;
+      background:linear-gradient(100deg,#ecfbf6,#f6fffc); border:1px solid #d9eee7;
+      box-shadow:0 7px 20px rgba(15,23,42,.045);
+    }
+    .mp-strip-icon { width:38px; height:38px; flex:0 0 38px; display:flex; align-items:center; justify-content:center; border-radius:13px; color:#087f6d; background:#dff7ee; }
+    .mp-strip-copy { min-width:0; }
+    .mp-strip-copy span { display:block; font-size:9px; font-weight:700; color:#55706c; }
+    .mp-strip-copy strong { display:block; margin-top:1px; font-size:20px; line-height:1; letter-spacing:-.03em; color:#075e54; }
+    .mp-strip-copy small { display:block; margin-top:2px; font-size:7.5px; color:#7b9691; }
+    .mp-strip-art { margin-left:auto; display:flex; align-items:center; gap:3px; padding-right:4px; color:#10a383; opacity:.42; }
+    .mp-strip-art i:last-child { margin-left:-13px; margin-top:-22px; }
+    .mp-section-head { display:flex; align-items:center; justify-content:space-between; padding:2px 2px 0; }
+    .mp-section-head > div { display:flex; align-items:center; gap:6px; color:#163a36; font-size:14px; font-weight:850; }
+    .mp-section-head > div i { color:#087f6d; }
+    .mp-section-hint { font-size:8px; font-weight:700; color:#7b9691; }
+    #category-pills { gap:8px !important; padding:6px 2px 7px !important; }
+    #category-pills button {
+      min-height:42px !important; padding:0 14px !important; border-radius:14px !important;
+      background:rgba(255,255,255,.90) !important; border:1px solid #dcebe7 !important;
+      box-shadow:0 4px 12px rgba(15,23,42,.035); color:#35525d !important; font-size:10px !important;
+    }
+    #category-pills button.bg-emerald-600, #category-pills button.bg-emerald-500 {
+      background:linear-gradient(135deg,#059669,#0f8f7d) !important; color:#fff !important; border-color:#059669 !important;
+      box-shadow:0 7px 16px rgba(5,150,105,.18);
+    }
+    #medicine-list { gap:10px !important; padding-top:2px !important; }
+    .mp-medicine-card {
+      border-radius:21px !important; padding:9px !important;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfefd 100%) !important;
+      border:1px solid #dcebe7 !important;
+      box-shadow:0 10px 25px rgba(20,64,56,.075),0 2px 5px rgba(15,23,42,.025) !important;
+    }
+    .mp-card-glow { width:92px; height:92px; opacity:.11; background:linear-gradient(135deg,#34d399,#0f766e); }
+    .mp-card-top { min-height:26px; }
+    .mp-form-badge { padding:5px 9px; font-size:9px; background:#dcf7ea !important; color:#096b59 !important; }
+    .mp-product-image { height:92px !important; margin:4px 0 7px !important; border-radius:17px !important; background:linear-gradient(145deg,#f3faf8,#edf5f2) !important; border-color:#dfebe8 !important; }
+    .mp-product-image img { padding:5px !important; }
+    .mp-image-placeholder { color:#0b9275; }
+    .mp-card-info h3 { font-size:12px; color:#162338; }
+    .mp-generic { font-size:8.5px; margin-top:3px; color:#75828d; }
+    .mp-card-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+    .mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { width:100%; min-height:34px; margin:0; border-radius:11px; justify-content:center; font-size:9px; font-weight:850; }
+    .mp-card-actions .mp-calc-btn { background:#e7faf3; border:1px solid #bcebd9; color:#087f6d; }
+    .mp-card-actions .mp-sell-btn { background:linear-gradient(135deg,#059669,#0b9275); box-shadow:0 5px 12px rgba(5,150,105,.16); }
+    .mp-card-actions .mp-calc-btn:active, .mp-card-actions .mp-sell-btn:active { transform:scale(.98); }
+    #med-count-badge { color:#49625f !important; font-size:9px !important; }
+    #sort-select { font-size:9px !important; }
+    @media (max-width:360px) {
+      .mp-dashboard-strip { min-height:62px; padding:9px; }
+      .mp-strip-icon { width:34px; height:34px; flex-basis:34px; }
+      .mp-strip-copy strong { font-size:18px; }
+      .mp-product-image { height:78px !important; }
+      .mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { min-height:32px; font-size:8.5px; }
+    }
+</style>
+
+<style>
+/* Premium Add/Edit Medicine form */
+#screen-add{padding-bottom:18px}
+#screen-add > .flex.items-center.justify-between{background:linear-gradient(135deg,#ecfdf5,#f8fafc);border:1px solid #d1fae5;border-radius:18px;padding:14px 14px 13px;margin-bottom:2px;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+#screen-add #form-title{font-size:19px;letter-spacing:-.02em}
+#screen-add #form-title:before{content:'+';display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:9px;border-radius:9px;background:#10b981;color:#fff;font-size:19px;vertical-align:-3px;box-shadow:0 4px 10px rgba(16,185,129,.22)}
+#screen-add form{gap:14px}
+#screen-add form>div{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:13px;box-shadow:0 4px 14px rgba(15,23,42,.035)}
+#screen-add form>div:first-of-type{background:linear-gradient(135deg,#f8fffc,#fff);border-color:#d1fae5}
+#screen-add label{letter-spacing:.025em}
+#screen-add input,#screen-add select,#screen-add textarea{transition:border-color .18s,box-shadow .18s,background .18s}
+#screen-add input:focus,#screen-add select:focus,#screen-add textarea:focus{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.10)}
+#screen-add #image-preview-container{width:86px;height:86px;border-radius:16px;border-color:#a7f3d0;background:#ecfdf5;box-shadow:inset 0 0 0 1px rgba(16,185,129,.08)}
+#screen-add #image-preview-container + div label{border-color:#a7f3d0;background:#fff;font-weight:700;min-height:42px}
+#screen-add .p-3.bg-emerald-50\/70{background:linear-gradient(145deg,#ecfdf5,#f8fffc);border-color:#bbf7d0;box-shadow:0 6px 18px rgba(16,185,129,.06)}
+#screen-add .p-3.bg-emerald-50\/70 .grid{gap:10px}
+#screen-add .p-3.bg-emerald-50\/70 input{min-height:42px;border-radius:11px}
+#screen-add .p-3.bg-emerald-50\/70 > div:first-child{padding-bottom:3px}
+#screen-add #med-tablet-price{min-height:38px;background:#f0fdf4}
+#screen-add textarea{min-height:76px;resize:vertical}
+#screen-add form>div:last-child{background:transparent;border:0;box-shadow:none;padding:0;position:sticky;bottom:8px;z-index:5}
+#screen-add form>div:last-child button{min-height:46px;border-radius:13px}
+#screen-add form>div:last-child button[type=submit]{box-shadow:0 8px 18px rgba(16,185,129,.22)}
+@media(max-width:380px){#screen-add .grid.grid-cols-2{gap:7px}#screen-add form>div{padding:11px}#screen-add #image-preview-container{width:76px;height:76px}}
+</style>
+</head>
+<body class="h-full flex justify-center items-center bg-slate-900 md:p-4 text-slate-800">
+
+  <!-- Mobile Screen Container -->
+  <div id="app-container" class="w-full max-w-md h-full md:h-[844px] bg-slate-50 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border-0 md:border border-slate-700">
+    
+    <!-- Top Header -->
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white px-5 pt-5 pb-4 shadow-md flex justify-between items-center z-10">
+      <div>
+        <div class="flex items-center space-x-2">
+          <i data-lucide="pill" class="w-6 h-6 text-emerald-300"></i>
+          <h1 class="font-bold text-xl tracking-tight">MediPrice PKR</h1>
+        </div>
+        <p class="text-xs text-emerald-100 mt-0.5">Stock & Sales Manager (Rs.)</p>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <button id="header-profile-btn" onclick="switchTab('profile')" class="bg-emerald-700/60 hover:bg-emerald-700 p-1.5 rounded-full text-emerald-100 hover:text-white transition-colors flex items-center justify-center border border-emerald-500/30" title="Profile & Settings">
+          <img id="header-avatar-img" src="" class="w-7 h-7 rounded-full object-cover hidden">
+          <i id="header-avatar-icon" data-lucide="user" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar p-4 pb-24">
+      
+      <!-- SCREEN 1: MEDICINE LIST (HOME) -->
+      <section id="screen-home" class="space-y-3">
+
+        <!-- Premium Pharmacy Dashboard -->
+        <div id="home-dashboard" class="mp-dashboard">
+          <div class="mp-dashboard-hero">
+            <div class="mp-hero-glow mp-hero-glow-1"></div>
+            <div class="mp-hero-glow mp-hero-glow-2"></div>
+            <div class="mp-hero-copy">
+              <span class="mp-eyebrow"><i data-lucide="activity" class="w-3.5 h-3.5"></i> PHARMACY OVERVIEW</span>
+              <h2>Good day, <span id="home-greeting">Pharmacy</span></h2>
+              <p>Manage medicines, prices and sales in one place.</p>
+            </div>
+            <div class="mp-hero-icon"><i data-lucide="pill" class="w-6 h-6"></i></div>
+          </div>
+          <div class="mp-dashboard-strip">
+            <div class="mp-strip-icon"><i data-lucide="store" class="w-5 h-5"></i></div>
+            <div class="mp-strip-copy"><span>Total Medicines</span><strong id="dash-medicine-count">0</strong><small>in your pharmacy database</small></div>
+            <div class="mp-strip-art" aria-hidden="true">
+              <i data-lucide="pill" class="w-10 h-10"></i>
+              <i data-lucide="plus" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="space-y-2">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-slate-400"></i>
+            <input type="text" id="search-input" placeholder="Search medicines, generics..." oninput="handleSearchFilter()" class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+            <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="mp-section-head">
+            <div><i data-lucide="layout-grid" class="w-4 h-4"></i><span>Categories</span></div>
+            <span class="mp-section-hint">Swipe →</span>
+          </div>
+          <div class="flex items-center justify-between gap-2 pt-0.5">
+            <div class="flex gap-2 w-full py-1 overflow-x-auto no-scrollbar" id="category-pills">
+              <!-- Dynamically populated tags -->
+            </div>
+          </div>
+
+          <!-- Sort & Bulk Action Toolbar -->
+          <div class="flex justify-between items-center text-xs text-slate-500 pt-0.5 px-1">
+            <div class="flex items-center space-x-2">
+              <span id="med-count-badge" class="font-medium text-slate-600">0 items found</span>
+              <button onclick="toggleBulkSelectMode()" id="bulk-toggle-btn" class="text-emerald-700 hover:text-emerald-800 font-bold bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md transition flex items-center space-x-1">
+                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                <span id="bulk-btn-text">Select</span>
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <span>Sort:</span>
+              <select id="sort-select" onchange="handleSearchFilter()" class="bg-transparent font-semibold text-emerald-700 focus:outline-none cursor-pointer">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="recent">Recently Added</option>
+                <option value="unit-low">Tablet Price (Low to High)</option>
+                <option value="pack-low">Pack Price (Low to High)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bulk Selection Action Bar -->
+          <div id="bulk-action-bar" class="hidden bg-slate-800 text-white rounded-xl p-2.5 flex items-center justify-between shadow-lg">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+              <span id="selected-count-text" class="text-xs font-semibold text-slate-200">0 selected</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="deleteSelectedMedicines()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Delete Selected</span>
+              </button>
+              <button onclick="exitBulkSelectMode()" class="bg-slate-700 hover:bg-slate-600 p-1 rounded-lg text-slate-300 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Medicine Cards Container -->
+        <div id="medicine-list" class="grid grid-cols-2 gap-2 pt-1">
+          <!-- Dynamic Cards Content -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-12 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 text-emerald-600">
+            <i data-lucide="package-open" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-slate-700 font-bold text-base">No Medicines Found</h3>
+          <p class="text-slate-500 text-xs mt-1 max-w-xs mx-auto">Load medical items in PKR.</p>
+          <div class="flex justify-center space-x-2 mt-4">
+            <button onclick="switchTab('add')" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md inline-flex items-center space-x-1">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Add Product</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SCREEN 2: ADD / EDIT MEDICINE FORM -->
+      <section id="screen-add" class="hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div><div class="flex items-center"><h2 id="form-title" class="text-lg font-bold text-slate-800">Add New Medicine</h2></div><p class="text-[10px] text-slate-500 mt-1 ml-[37px]">Add medicine details, pack pricing and photo</p></div>
+          <button onclick="resetForm(); switchTab('home');" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="medicine-form" onsubmit="saveMedicine(event)" class="space-y-4">
+          <input type="hidden" id="med-id">
+
+          <!-- Image Picker / Camera Preview -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Product Picture</label>
+            <div class="flex items-center space-x-3">
+              <div id="image-preview-container" class="w-20 h-20 rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 flex items-center justify-center overflow-hidden relative group">
+                <img id="image-preview" src="" class="hidden w-full h-full object-cover">
+                <i id="image-placeholder-icon" data-lucide="camera" class="w-8 h-8 text-slate-400"></i>
+                <button type="button" id="remove-img-btn" onclick="removeImage()" class="hidden absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600">
+                  <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+              </div>
+
+              <div class="flex-1 space-y-2">
+                <label for="img-input" class="inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer shadow-sm">
+                  <i data-lucide="upload" class="w-4 h-4 mr-1.5 text-slate-500"></i>
+                  <span>Upload / Take Photo</span>
+                </label>
+                <input type="file" id="img-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)" class="hidden">
+                <p class="text-[10px] text-slate-400">Attach medicine box or pack photo.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Medicine Name *</label>
+            <input type="text" id="med-name" required placeholder="e.g. Panadol Extra, Hydryllin, Rigix" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <!-- Dosage Form & Category Select -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form Type *</label>
+              <select id="med-form-type" onchange="updateFormTypeLabels()" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
+                <option value="Tablet">Tablet / Capsule</option>
+                <option value="Syrup">Syrup / Suspension</option>
+                <option value="Injection">Injection / Vial</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Cream">Cream</option>
+                <option value="Gel">Gel</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Liquid">Liquid</option>
+                <option value="Sachet">Sachet</option>
+                <option value="Powder">Powder</option>
+                <option value="Inhaler">Inhaler</option>
+                <option value="Drops">Eye/Ear Drops</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category / Tag</label>
+              <select id="med-category-select" onchange="toggleCustomCategory(this.value)" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="Tablets">Tablets</option>
+                <option value="Syrups">Syrups</option>
+                <option value="IV">IV</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Cream">Cream</option>
+                <option value="Gel">Gel</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Liquid">Liquid</option>
+                <option value="Sachet">Sachet</option>
+                <option value="Powder">Powder</option>
+                <option value="Inhaler">Inhaler</option>
+                <option value="Painkiller">Painkiller</option>
+                <option value="Antibiotic">Antibiotic</option>
+                <option value="Cough & Cold">Cough & Cold</option>
+                <option value="Vitamins">Vitamins</option>
+                <option value="Cardiovascular">Cardiovascular</option>
+                <option value="Diabetes">Diabetes</option>
+                <option value="Daily Dose">Daily Dose</option>
+                <option value="First Aid">First Aid</option>
+                <option value="Gastro">Gastro</option>
+                <option value="Other">Other (Custom)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="custom-cat-container" class="hidden">
+            <input type="text" id="med-category-custom" placeholder="Custom Category Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <!-- Price in PKR -->
+          <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-emerald-600 text-white flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-100">Medicine Pricing</p>
+                <h3 id="price-section-title" class="text-sm font-extrabold">PRICE IN PKR (Rs.)</h3>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+                <i data-lucide="coins" class="w-5 h-5"></i>
+              </div>
+            </div>
+
+            <div class="p-3 space-y-3">
+              <!-- Box Pricing -->
+              <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <i data-lucide="package" class="w-4 h-4 text-emerald-600"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs font-extrabold text-slate-800">Box Pricing</p>
+                    <p class="text-[9px] text-slate-400">Enter box details to auto-calculate rates</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Full Box Price (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-slate-400">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-box-price" oninput="autoCalcBoxPricing()" placeholder="e.g. 500" class="w-full h-10 pl-9 pr-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Tablets in Box</label>
+                    <input type="number" min="1" step="1" id="med-total-tabs-box" placeholder="e.g. 200" oninput="autoCalcBoxPricing()" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Pata's</label>
+                    <input type="number" min="1" step="1" id="med-strips-per-box" placeholder="e.g. 10" oninput="autoCalcBoxPricing()" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Tablets in 1 Pata</label>
+                    <input type="number" min="1" step="1" id="med-tablets-per-pata" value="10" oninput="autoCalcUnitPrice(); autoCalcBoxPricing()" placeholder="10" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pata Pricing -->
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label id="label-pack-price" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Pata (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-emerald-600">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-pata-price" required oninput="autoCalcUnitPrice()" placeholder="0.00" class="w-full h-10 pl-9 pr-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-extrabold text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label id="label-per-unit-title" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Tablet (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-emerald-600">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-tablet-price" required placeholder="0.00" class="w-full h-10 pl-9 pr-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-extrabold text-emerald-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[9px] text-emerald-700/70 mt-2">Box price ÷ total tablets = tablet rate. Box price ÷ total pata's = pata rate.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medicine Storage Place -->
+          <div class="bg-amber-50/70 rounded-2xl p-3 border border-amber-200">
+            <div class="flex items-center gap-2 mb-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-amber-600"></i>
+              <div>
+                <label for="med-place" class="block text-xs font-extrabold text-amber-800 uppercase tracking-wider">Place</label>
+                <p class="text-[9px] text-amber-700/70">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+              </div>
+            </div>
+            <select id="med-place" class="w-full h-10 px-3 bg-white border border-amber-200 rounded-xl text-sm font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300">
+              <option value="">Select Place</option>
+            </select>
+          </div>
+
+          <!-- Notes & Dosage Info -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Notes / Dosage / Mg</label>
+            <textarea id="med-notes" rows="2" placeholder="e.g. 500mg, 1 tsp twice daily after meals" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          </div>
+
+          <!-- Form Submit Buttons -->
+          <div class="pt-2 flex space-x-2">
+            <button type="button" onclick="resetForm(); switchTab('home');" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-sm hover:bg-slate-100 transition">
+              Cancel
+            </button>
+            <button type="submit" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm shadow-md transition flex items-center justify-center space-x-1">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Save Medicine</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- SCREEN 3: CALCULATOR & ESTIMATOR -->
+      <section id="screen-calc" class="hidden space-y-4">
+        <div class="border-b border-slate-200 pb-3">
+          <h2 class="text-lg font-bold text-slate-800">PKR Prescription Estimator</h2>
+          <p class="text-xs text-slate-500">Calculate total prescription cost in Rs. for tablets, syrups, or injections.</p>
+        </div>
+
+        <!-- Searchable Medicine Select Dropdown -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Select Medicine</label>
+            <button type="button" onclick="resetCalculator()" class="text-[10px] font-bold text-slate-400 hover:text-emerald-600">Reset</button>
+          </div>
+          
+          <!-- Combined Search + Select Medicine -->
+          <div class="relative">
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" id="calc-search-input" placeholder="Search & select medicine..." autocomplete="off" oninput="populateCalcDropdown(); this.value.trim() ? document.getElementById('clear-calc-search')?.classList.remove('hidden') : document.getElementById('clear-calc-search')?.classList.add('hidden')" onclick="populateCalcDropdown(true)" class="w-full pl-9 pr-9 py-3 bg-white border-2 border-emerald-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+              <button id="clear-calc-search" type="button" onclick="clearCalcSearch(); return false;" onmousedown="event.preventDefault();" aria-label="Clear search" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div id="calc-medicine-results" class="hidden absolute z-30 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg"></div>
+            <select id="calc-med-select" onchange="updateCalcDetails()" class="hidden">
+              <!-- Internal selected medicine value -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Pata Pricing Calculator -->
+        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-extrabold text-emerald-800">PRICING IN PKR (Rs.)</h3>
+            <div class="w-9 h-9 rounded-full bg-white border border-emerald-200 flex items-center justify-center">
+              <i data-lucide="calculator" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+          </div>
+
+          <!-- Calculation input order:
+               1. Full Box Price
+               2. Total Tablets in Box
+               3. Total Pata(s) / Strips in Box
+               4. Price / Pata (calculated)
+               5. Tablets in 1 Pata
+          -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Full Box Price (Rs.)</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
+                <input type="number" min="0" step="0.01" id="calc-box-price" placeholder="500" oninput="calculatePataUnitRate()" class="w-full pl-11 pr-2 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Tablets in Box</label>
+              <input type="number" min="1" step="1" id="calc-total-tabs-box" placeholder="200" oninput="calculatePataUnitRate()" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Pata's</label>
+              <input type="number" min="1" step="1" id="calc-strips-box" placeholder="10" oninput="calculatePataUnitRate()" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Price / Pata (Rs.) *</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
+                <input type="number" min="0" step="0.01" id="calc-price-pata" value="" placeholder="50" oninput="calculatePataUnitRate()" class="w-full pl-11 pr-2 py-3 bg-white border-2 border-emerald-400 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tablets in 1 Pata</label>
+              <input type="number" min="1" step="1" id="calc-units-pata" value="" placeholder="10" oninput="calculatePataUnitRate()" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-emerald-100 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-slate-700">Price Per Tablet (Rs.):</div>
+              <p class="text-[10px] text-slate-400 mt-0.5">Calculated tablet rate</p>
+            </div>
+            <div class="min-w-[125px] bg-white border-2 border-emerald-300 rounded-xl px-4 py-3 text-right">
+              <span class="text-xs font-bold text-slate-500 mr-1">Rs.</span>
+              <span id="calc-unit-price" class="text-xl font-extrabold text-emerald-700">0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Medicine Summary Card -->
+        <div id="calc-summary-card" class="bg-slate-100 border border-slate-200 rounded-2xl p-3 hidden">
+          <div class="flex items-center gap-3">
+            <img id="calc-img" src="" alt="Medicine" class="w-12 h-12 rounded-lg object-cover bg-slate-200 shrink-0">
+            <div class="min-w-0">
+              <h4 id="calc-name" class="font-bold text-slate-800 text-sm truncate">--</h4>
+              <p id="calc-prices-text" class="text-xs text-slate-500">Pata: Rs. 0 | Tablet: Rs. 0</p>
+              <p id="calc-pack-info" class="text-[10px] text-slate-400 mt-0.5">—</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Full Box Price</div>
+              <div id="calc-box-price-display" class="text-sm font-extrabold text-slate-800 mt-0.5">Rs. —</div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total Tablets</div>
+              <div id="calc-total-tabs-display" class="text-sm font-extrabold text-slate-800 mt-0.5">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inputs for Quantities -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-extrabold text-slate-800">Quantity Calculator</div>
+              <div class="text-[10px] text-slate-400">Enter pata/strip and loose tablet quantity</div>
+            </div>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold">PKR</div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label id="calc-pata-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Bottles</label>
+              <input type="number" min="0" value="0" id="calc-pata-qty" oninput="calculateTotal()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <div>
+              <label id="calc-tablet-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
+              <input type="number" min="0" value="0" id="calc-tablet-qty" oninput="calculateTotal()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
+            <div>
+              <span class="text-xs text-emerald-800 font-medium">Total Cost (PKR)</span>
+              <p class="text-[10px] text-emerald-600">Calculated in Pakistani Rupees</p>
+            </div>
+            <div id="calc-total-result" class="text-2xl font-extrabold text-emerald-700">
+              Rs. 0.00
+            </div>
+          </div>
+          <div id="calc-breakdown" class="text-[10px] text-slate-400 text-center">0 pata + 0 tablets</div>
+
+          <button onclick="recordSaleFromCalc()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1.5">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Record as Completed Sale</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: SUMMARY & SALES STATS -->
+      <section id="screen-stats" class="hidden space-y-4">
+        <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Sales & Database Stats</h2>
+            <p class="text-xs text-slate-500">Live revenue analytics & sales performance</p>
+          </div>
+          <button onclick="clearSalesHistoryConfirm()" class="text-[11px] font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition">
+            Reset Sales
+          </button>
+        </div>
+
+        <!-- Sales Analytics Summary Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center opacity-90">
+              <span class="text-[10px] font-bold uppercase tracking-wider">Total Sales Revenue</span>
+              <i data-lucide="trending-up" class="w-4 h-4"></i>
+            </div>
+            <div id="stat-total-revenue" class="text-2xl font-black mt-2">Rs. 0.00</div>
+            <p class="text-[10px] text-emerald-100 mt-1" id="stat-today-revenue">Today: Rs. 0.00</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-3.5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center opacity-90">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Total Items Sold</span>
+              <i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <div id="stat-total-sales-count" class="text-2xl font-black mt-2">0</div>
+            <p class="text-[10px] text-slate-300 mt-1" id="stat-today-sales-count">Today: 0 orders</p>
+          </div>
+        </div>
+
+        <!-- Product Stats -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+          <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
+          <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+        </div>
+
+        <!-- Sales History List -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Recent Sales History</h3>
+            <select id="sales-filter-select" onchange="renderSalesHistory()" class="text-xs font-semibold text-emerald-700 bg-transparent focus:outline-none">
+              <option value="all">All Time</option>
+              <option value="today">Today Only</option>
+            </select>
+          </div>
+
+          <div id="sales-history-container" class="space-y-2 max-h-56 overflow-y-auto no-scrollbar pr-1">
+            <!-- Dynamic sales history entries -->
+          </div>
+        </div>
+
+        <!-- Form Breakdown list -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Dosage Form Distribution</h3>
+          <div id="form-type-breakdown-list" class="space-y-2 text-xs">
+            <!-- Dynamic elements -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: USER PROFILE & APP SETTINGS -->
+      <section id="screen-profile" class="hidden space-y-4">
+        
+        <!-- Profile Header Card -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm text-center relative overflow-hidden">
+          <div class="h-16 bg-gradient-to-r from-emerald-600 to-teal-700 -mx-4 -mt-4 mb-8"></div>
+          <div class="relative -mt-16 inline-block">
+            <img id="profile-avatar-preview" src="https://placehold.co/120x120/0d9488/ffffff?text=User" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md mx-auto bg-slate-100">
+            <label for="avatar-input" class="absolute bottom-0 right-0 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-full shadow cursor-pointer transition">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+            </label>
+            <input type="file" id="avatar-input" accept="image/*" onchange="handleAvatarUpload(event)" class="hidden">
+          </div>
+
+          <h3 id="display-user-name" class="font-bold text-slate-800 text-lg mt-1">Pharmacy Admin</h3>
+          <p id="display-store-name" class="text-xs text-emerald-700 font-semibold">MediPrice Health Store</p>
+          <span id="display-user-location" class="inline-flex items-center text-[11px] text-slate-400 mt-1">
+            <i data-lucide="map-pin" class="w-3 h-3 mr-1 text-slate-400"></i>
+            <span>Lahore, Pakistan</span>
+          </span>
+        </div>
+
+        <!-- Editable Profile Information -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">User Details</h4>
+            <button onclick="saveUserProfile()" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Save Info</span>
+            </button>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 uppercase">Your Name</label>
+              <input type="text" id="input-user-name" value="Pharmacy Admin" oninput="updateProfilePreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 uppercase">Store / Pharmacy Name</label>
+              <input type="text" id="input-store-name" value="MediPrice Health Store" oninput="updateProfilePreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Location</label>
+                <input type="text" id="input-user-location" value="Lahore, Pakistan" oninput="updateProfilePreview()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Contact Number</label>
+                <input type="text" id="input-user-phone" value="+92 300 1234567" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage & Data Maintenance -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">Storage & Maintenance</h4>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-600 font-medium">LocalStorage Used:</span>
+              <span id="storage-used-text" class="font-bold text-emerald-700">0 KB</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="openBackupModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1">
+                <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Backup / Restore</span>
+              </button>
+
+              <button onclick="removeDuplicateMedicines()" class="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1">
+                <i data-lucide="copy-x" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>Remove Duplicates</span>
+              </button>
+            </div>
+
+            <button onclick="clearAllDataWithConfirm()" class="w-full py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1 mt-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i>
+              <span>Clear All Data</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 flex justify-around items-center z-20">
+      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span>List</span>
+      </button>
+
+      <button onclick="switchTab('calc')" id="nav-calc" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="calculator" class="w-5 h-5"></i>
+        <span>Calc</span>
+      </button>
+
+      <button onclick="switchTab('add')" id="nav-add" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <div class="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg -mt-5 border-2 border-white">
+          <i data-lucide="plus" class="w-6 h-6"></i>
+        </div>
+        <span class="text-[10px] mt-0.5">Add</span>
+      </button>
+
+      <button onclick="switchTab('stats')" id="nav-stats" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+        <span>Stats</span>
+      </button>
+
+      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="user" class="w-5 h-5"></i>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <!-- MODAL: QUICK SELL / RECORD SALE MODAL -->
+    <div id="sell-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-md rounded-t-3xl md:rounded-3xl p-5 space-y-4 shadow-xl">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+              <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Record Sale</h3>
+          </div>
+          <button onclick="closeSellModal()" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <input type="hidden" id="sell-med-id">
+
+        <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center space-x-3">
+          <img id="sell-med-img" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-200">
+          <div>
+            <h4 id="sell-med-name" class="font-bold text-slate-800 text-sm">--</h4>
+            <p id="sell-med-stock-text" class="text-xs text-emerald-700 font-semibold"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label id="sell-pack-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Packs</label>
+            <input type="number" min="0" value="1" id="sell-pack-qty" oninput="calcSellTotal()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label id="sell-unit-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
+            <input type="number" min="0" value="0" id="sell-unit-qty" oninput="calcSellTotal()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
+          <span class="text-xs text-emerald-800 font-bold">Total Bill (PKR):</span>
+          <span id="sell-total-bill" class="text-2xl font-black text-emerald-700">Rs. 0.00</span>
+        </div>
+
+        <div class="flex space-x-2">
+          <button onclick="closeSellModal()" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-xs hover:bg-slate-100">
+            Cancel
+          </button>
+          <button onclick="confirmRecordSale()" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>Confirm & Complete Sale</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: MEDICINE DETAILS MODAL -->
+    <div id="details-modal" class="hidden fixed inset-0 bg-slate-950/65 backdrop-blur-md z-50 flex justify-center items-end md:items-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-md rounded-t-[30px] md:rounded-[30px] max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
+        <div class="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mt-2 md:hidden"></div>
+        <div class="p-4 sm:p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-1.5">
+            <span id="modal-form-tag" class="px-2.5 py-1 bg-teal-50 text-teal-700 text-[10px] font-extrabold rounded-full uppercase tracking-wider border border-teal-100">Form</span>
+            <span id="modal-category-tag" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider border border-emerald-100">Category</span>
+          </div>
+          <button onclick="closeDetailsModal()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 p-4">
+          <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-100/50"></div>
+          <div class="relative text-center">
+            <div class="w-[104px] h-[104px] mx-auto rounded-[24px] p-1 bg-white shadow-lg border border-emerald-100">
+              <img id="modal-img" src="" class="w-full h-full object-cover rounded-[20px] bg-emerald-600">
+            </div>
+            <h3 id="modal-title" class="text-[24px] leading-tight font-extrabold text-slate-800 mt-3">Medicine Name</h3>
+            <p id="modal-notes" class="text-[12px] leading-5 text-slate-500 mt-1 px-3 italic">No dosage or medicine notes attached.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="package" class="w-3.5 h-3.5"></i><span id="modal-box-title" class="text-[9px] uppercase tracking-wider font-extrabold">Full Box Price</span></div>
+            <span id="modal-box-price" class="text-[18px] leading-none font-extrabold text-emerald-600">Rs. —</span>
+            <span id="modal-box-detail" class="text-[10px] text-slate-400 block mt-1">Complete box</span>
+          </div>
+          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="pill" class="w-3.5 h-3.5"></i><span id="modal-total-tabs-title" class="text-[9px] uppercase tracking-wider font-extrabold">Total Tablets</span></div>
+            <span id="modal-total-tabs" class="text-[18px] leading-none font-extrabold text-teal-600">—</span>
+            <span id="modal-total-tabs-detail" class="text-[10px] text-slate-400 block mt-1">Tablets in box</span>
+          </div>
+          <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100 shadow-sm">
+            <div class="flex items-center gap-1.5 text-emerald-700 mb-1"><i data-lucide="layers-3" class="w-3.5 h-3.5"></i><span id="modal-pack-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Pata</span></div>
+            <span id="modal-pata-price" class="text-[18px] leading-none font-extrabold text-emerald-700">Rs. 0.00</span>
+            <span id="modal-pata-count" class="text-[10px] text-emerald-700/70 block mt-1">10 tablets</span>
+          </div>
+          <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm">
+            <div class="flex items-center gap-1.5 text-teal-700 mb-1"><i data-lucide="coins" class="w-3.5 h-3.5"></i><span id="modal-unit-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Tablet</span></div>
+            <span id="modal-tablet-price" class="text-[18px] leading-none font-extrabold text-teal-700">Rs. 0.00</span>
+            <span id="modal-stock-text" class="text-[10px] text-teal-700 font-bold block mt-1"></span>
+          </div>
+        </div>
+
+        <!-- Medicine Storage Place (display only) -->
+        <div class="w-fit max-w-[220px] p-3 bg-amber-50/70 rounded-2xl border border-amber-200 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-amber-700">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold">Place</span>
+            </div>
+            <span id="modal-place-display" class="px-3 py-1.5 bg-white rounded-xl border border-amber-200 text-sm font-extrabold text-slate-800 shadow-sm">—</span>
+          </div>
+          <p class="text-[9px] text-amber-700/70 mt-1.5 whitespace-nowrap">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button id="modal-sell-btn" onclick="" class="py-3 bg-emerald-600 text-white font-extrabold rounded-2xl text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Sell Now</span>
+          </button>
+          <button id="modal-calc-btn" onclick="" class="py-3 bg-teal-600 text-white font-extrabold rounded-2xl text-sm hover:bg-teal-700 shadow-lg shadow-teal-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+            <span>Calculator</span>
+          </button>
+          <button id="modal-edit-btn" onclick="" class="py-2.5 bg-slate-100 text-slate-700 font-bold rounded-2xl text-xs hover:bg-slate-200 border border-slate-200 flex items-center justify-center space-x-1.5 transition">
+            <i data-lucide="edit" class="w-4 h-4"></i>
+            <span>Edit</span>
+          </button>
+          <button id="modal-delete-btn" onclick="" class="py-2.5 bg-red-50 text-red-600 border border-red-200 font-bold rounded-2xl text-xs hover:bg-red-100 flex items-center justify-center space-x-1.5 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: BACKUP / EXPORT / IMPORT -->
+    <div id="backup-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-xl">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <h3 class="font-bold text-slate-800 text-base">Backup & Restore</h3>
+          <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <button onclick="exportDataJSON()" class="w-full py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl shadow hover:bg-emerald-700 flex items-center justify-center space-x-2">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Export Data (JSON)</span>
+          </button>
+
+          <label class="w-full py-2.5 bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-xl cursor-pointer hover:bg-slate-200 flex items-center justify-center space-x-2">
+            <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+            <span>Import Data (JSON)</span>
+            <input type="file" id="import-file-input" accept=".json" onchange="importDataJSON(event)" class="hidden">
+          </label>
+        </div>
+        <p class="text-[10px] text-slate-400 text-center">Save your PKR medicine database or transfer to another phone.</p>
+      </div>
+    </div>
+
+    <!-- Notification Toast Message -->
+    <div id="toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-medium shadow-xl z-50 transition-all duration-300 flex items-center space-x-2">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toast-message">Action successful</span>
+    </div>
+
+  </div>
+
+  <script>
+    // Global State
+    let medicines = [];
+    let salesHistory = [];
+    let selectedCategory = 'ALL';
+    let currentImageData = '';
+    let activeTab = 'home';
+    let isBulkSelectMode = false;
+    let selectedMedIds = new Set();
+    let currentSellMed = null;
+    let userProfile = {
+      name: 'Pharmacy Admin',
+      store: 'MediPrice Health Store',
+      location: 'Lahore, Pakistan',
+      phone: '+92 300 1234567',
+      avatar: ''
+    };
+
+    // Helper: Clean product names and remove version suffixes like V2, V3, #1, etc.
+    function cleanMedicineName(name) {
+      if (!name) return '';
+      return name
+        .replace(/\s*#\d+/gi, '')
+        .replace(/\s+V\d+\b/gi, '')
+        .replace(/\s+v\d+\b/gi, '')
+        .trim();
+    }
+
+    // Helper: Deep brand-level deduplication key extraction.
+    // Removes dosage strengths (e.g., 1g, 500mg, 250 mg) and pack/unit counts (e.g., 100 tab, 10 tab, 20 caps)
+    function getBrandKey(name) {
+      if (!name) return '';
+      let cleaned = name.toLowerCase();
+
+      // Remove parenthetical details
+      cleaned = cleaned.replace(/\([^)]*\)/g, ' ');
+
+      // Remove strengths and unit measurements (e.g. 1g, 500mg, 10mg/ml, 5ml, 100ml)
+      cleaned = cleaned.replace(/\b\d+(\.\d+)?\s*(g|mg|mcg|ml|iu|%|l)\b/gi, ' ');
+
+      // Remove quantity counts and unit descriptors (e.g. 100 tab, 10 tabs, 20 caps, 5 vials)
+      cleaned = cleaned.replace(/\b\d+\s*(tablets?|tabs?|capsules?|caps?|vials?|ampoules?|sachets?|bottles?|packs?)\b/gi, ' ');
+
+      // Remove isolated numbers left behind
+      cleaned = cleaned.replace(/\b\d+\b/g, ' ');
+
+      // Strip symbols and special punctuation
+      cleaned = cleaned.replace(/[\(\)\-\,\.\/\+\#]/g, ' ');
+
+      // Normalize spaces
+      cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+      return cleaned;
+    }
+
+    // Auto-Generator for Pakistani medical products list
+    function generatePakistaniMedsWithSeeds() {
+      const commonProducts = [
+        ["Panadol", "Paracetamol", "Tablet", "Haleon Pakistan"], 
+        ["Panadol Extra", "Paracetamol + Caffeine", "Tablet", "Haleon Pakistan"], 
+        ["Panadol CF", "Paracetamol + Phenylephrine + Chlorpheniramine", "Tablet", "Haleon Pakistan"], 
+        ["Panadol Children", "Paracetamol", "Suspension", "Haleon Pakistan"], 
+        ["Calpol", "Paracetamol", "Suspension", "Haleon Pakistan"], 
+        ["Brufen", "Ibuprofen", "Tablet", "Abbott Laboratories Pakistan"], 
+        ["Brufen DS", "Ibuprofen", "Suspension", "Abbott Laboratories Pakistan"], 
+        ["Brufen Plus", "Ibuprofen + Paracetamol", "Tablet", "Abbott Laboratories Pakistan"], 
+        ["Disprin", "Aspirin", "Tablet", "Reckitt Benckiser Pakistan"], 
+        ["Ponstan", "Mefenamic acid", "Tablet", "Pfizer Pakistan"], 
+        ["Voltral", "Diclofenac sodium", "Tablet", "Novartis Pakistan"], 
+        ["Synflex", "Naproxen", "Tablet", "Martin Dow"], 
+        ["Dicloran", "Diclofenac sodium", "Tablet", "Sami Pharmaceuticals"], 
+        ["Nuberol Forte", "Paracetamol + Orphenadrine", "Tablet", "Searle Pakistan"], 
+        ["Tramal", "Tramadol", "Capsule", "Searle Pakistan"], 
+        ["Tramal Plus", "Paracetamol + Tramadol", "Tablet", "Searle Pakistan"], 
+        ["Vamol", "Paracetamol", "Tablet", "Sami Pharmaceuticals"], 
+        ["Pracmol", "Paracetamol", "Tablet", "Sami Pharmaceuticals"], 
+        ["Augmentin", "Amoxicillin + Clavulanate", "Tablet", "GSK Pakistan"], 
+        ["Amoxi-Clav", "Amoxicillin + Clavulanate", "Suspension", "Novartis Pakistan"], 
+        ["Calamox", "Amoxicillin + Clavulanate", "Suspension", "Bosch Pharmaceuticals"], 
+        ["Amclav", "Amoxicillin + Clavulanate", "Tablet", "Getz Pharma"], 
+        ["Flagyl", "Metronidazole", "Tablet", "Sanofi Pakistan"], 
+        ["Cefspan", "Cefixime", "Capsule", "Hilton Pharma"], 
+        ["Cefiget", "Cefixime", "Tablet", "Getz Pharma"], 
+        ["Ciproxin", "Ciprofloxacin", "Tablet", "Bayer Pakistan"], 
+        ["Cipesta", "Ciprofloxacin", "Tablet", "Getz Pharma"], 
+        ["Brufen Cream", "Ibuprofen", "Cream", "Abbott Laboratories Pakistan"], 
+        ["Voltaren Emulgel", "Diclofenac", "Gel", "Novartis Pakistan"], 
+        ["Betnovate", "Betamethasone", "Cream", "GSK Pakistan"], 
+        ["Fucidin", "Fusidic acid", "Cream", "LEO Pharma"], 
+        ["Polyfax", "Polymyxin B + Bacitracin", "Ointment", "Searle Pakistan"], 
+        ["Soframycin", "Framycetin", "Cream", "Sanofi Pakistan"], 
+        ["Dettol Antiseptic", "Chloroxylenol", "Liquid", "Reckitt Benckiser Pakistan"], 
+        ["ORS", "Oral rehydration salts", "Sachet", "Multiple Pakistani suppliers"], 
+        ["Gaviscon", "Sodium alginate + Antacids", "Suspension", "Reckitt Benckiser Pakistan"], 
+        ["Eno", "Antacid salts", "Powder", "Haleon Pakistan"], 
+        ["Buscopan", "Hyoscine butylbromide", "Tablet", "Sanofi Pakistan"], 
+        ["Motilium", "Domperidone", "Tablet", "Janssen/Johnson & Johnson"], 
+        ["Imodium", "Loperamide", "Capsule", "Janssen/Johnson & Johnson"], 
+        ["Losec", "Omeprazole", "Capsule", "AstraZeneca Pakistan"], 
+        ["Risek", "Omeprazole", "Capsule", "Getz Pharma"], 
+        ["Nexum", "Esomeprazole", "Tablet", "Getz Pharma"], 
+        ["Loprin", "Aspirin", "Tablet", "Searle Pakistan"], 
+        ["Concor", "Bisoprolol", "Tablet", "Merck Pakistan"], 
+        ["Norvasc", "Amlodipine", "Tablet", "Pfizer Pakistan"], 
+        ["Cozaar", "Losartan", "Tablet", "Searle Pakistan"], 
+        ["Lasix", "Furosemide", "Tablet", "Sanofi Pakistan"], 
+        ["Lipitor", "Atorvastatin", "Tablet", "Pfizer Pakistan"], 
+        ["Glucophage", "Metformin", "Tablet", "Merck Pakistan"], 
+        ["Getryl", "Glimepiride", "Tablet", "Getz Pharma"], 
+        ["Daonil", "Glibenclamide", "Tablet", "Sanofi Pakistan"], 
+        ["Ventolin", "Salbutamol", "Inhaler", "GSK Pakistan"], 
+        ["Seretide", "Fluticasone + Salmeterol", "Inhaler", "GSK Pakistan"], 
+        ["Montika", "Montelukast", "Tablet", "Hilton Pharma"], 
+        ["Montiget", "Montelukast", "Tablet", "Getz Pharma"], 
+        ["Rigix", "Cetirizine", "Tablet", "AGP Pharma"], 
+        ["Zyrtec", "Cetirizine", "Tablet", "GSK Pakistan"], 
+        ["Avil", "Pheniramine", "Tablet", "Sanofi Pakistan"], 
+        ["Clarityne", "Loratadine", "Tablet", "Bayer Pakistan"], 
+        ["Aerius", "Desloratadine", "Tablet", "MSD/Organon Pakistan"], 
+        ["Brufen Syrup", "Ibuprofen", "Syrup", "Abbott Laboratories Pakistan"], 
+        ["Ventolin Syrup", "Salbutamol", "Syrup", "GSK Pakistan"], 
+        ["Klaricid", "Clarithromycin", "Tablet", "Abbott Laboratories Pakistan"], 
+        ["Augmentin Syrup", "Amoxicillin + Clavulanate", "Suspension", "GSK Pakistan"], 
+        ["Amoxil", "Amoxicillin", "Capsule", "GSK Pakistan"], 
+        ["Velosef", "Cephradine", "Capsule", "Searle Pakistan"], 
+        ["Keflex", "Cephalexin", "Capsule", "GSK Pakistan"], 
+        ["Bactrim", "Co-trimoxazole", "Tablet", "Searle Pakistan"], 
+        ["Zinnat", "Cefuroxime", "Tablet", "GSK Pakistan"], 
+        ["Flagyl Suspension", "Metronidazole", "Suspension", "Sanofi Pakistan"], 
+        ["Nystatin", "Nystatin", "Suspension", "Multiple Pakistani suppliers"], 
+        ["Canesten", "Clotrimazole", "Cream", "Bayer Pakistan"], 
+        ["Daktarin", "Miconazole", "Cream", "Janssen Pakistan"], 
+        ["Neurobion", "B Vitamins", "Tablet", "Merck Pakistan"], 
+        ["Surbex-Z", "Multivitamins + Zinc", "Tablet", "Abbott Laboratories Pakistan"], 
+        ["Centrum", "Multivitamins", "Tablet", "Haleon/Pfizer distribution"], 
+        ["Fefol", "Iron + Folic acid", "Capsule", "Abbott Laboratories Pakistan"], 
+        ["Iberet-Folic", "Iron + Vitamins", "Tablet", "Abbott Laboratories Pakistan"], 
+        ["Caltrate", "Calcium + Vitamin D", "Tablet", "Pfizer Pakistan"], 
+        ["Osteocare", "Calcium + Vitamin D + Minerals", "Tablet", "Vitabiotics"], 
+        ["Evion", "Vitamin E", "Capsule", "Merck Pakistan"], 
+        ["Vitamin D3", "Cholecalciferol", "Capsule", "Multiple Pakistani suppliers"], 
+        ["Advil", "Ibuprofen", "Tablet", "Pfizer distribution"], 
+        ["Disprin Extra", "Aspirin + Caffeine", "Tablet", "Reckitt Benckiser Pakistan"], 
+        ["A-Fenac", "Diclofenac sodium", "Tablet", "AGP Pharma"], 
+        ["A-Fenac Plus", "Diclofenac + Paracetamol", "Tablet", "AGP Pharma"], 
+        ["Brugesic", "Ibuprofen", "Suspension", "Hilton Pharma"], 
+        ["Vee-Bufen", "Ibuprofen", "Tablet", "Venus Pharma"]
+      ];
+
+      // Additional 500 common pharmacy medicines for Pakistani medical stores.
+      // These are generic/common product seeds; verify current local MRP before relying on prices.
+      const additional500 = ['Paracetamol', 'Ibuprofen', 'Diclofenac Sodium', 'Naproxen', 'Mefenamic Acid', 'Ketoprofen', 'Ketorolac', 'Aceclofenac', 'Etoricoxib', 'Celecoxib', 'Meloxicam', 'Piroxicam', 'Indomethacin', 'Aspirin', 'Tramadol', 'Tapentadol', 'Nimesulide', 'Etodolac', 'Lornoxicam', 'Dexketoprofen', 'Amoxicillin', 'Amoxicillin Clavulanate', 'Ampicillin', 'Flucloxacillin', 'Cloxacillin', 'Dicloxacillin', 'Penicillin V', 'Azithromycin', 'Clarithromycin', 'Erythromycin', 'Roxithromycin', 'Clindamycin', 'Lincomycin', 'Doxycycline', 'Minocycline', 'Tetracycline', 'Cefixime', 'Cefuroxime', 'Cefpodoxime', 'Cefdinir', 'Cefaclor', 'Cephalexin', 'Cephradine', 'Cefadroxil', 'Cefprozil', 'Ciprofloxacin', 'Levofloxacin', 'Moxifloxacin', 'Ofloxacin', 'Norfloxacin', 'Nalidixic Acid', 'Co-trimoxazole', 'Trimethoprim', 'Metronidazole', 'Tinidazole', 'Secnidazole', 'Nitrofurantoin', 'Fosfomycin', 'Rifampicin', 'Isoniazid', 'Pyrazinamide', 'Ethambutol', 'Linezolid', 'Vancomycin', 'Teicoplanin', 'Omeprazole', 'Esomeprazole', 'Pantoprazole', 'Rabeprazole', 'Lansoprazole', 'Dexlansoprazole', 'Famotidine', 'Cimetidine', 'Nizatidine', 'Sucralfate', 'Domperidone', 'Metoclopramide', 'Itopride', 'Levosulpiride', 'Mosapride', 'Ondansetron', 'Granisetron', 'Prochlorperazine', 'Meclizine', 'Dimenhydrinate', 'Loperamide', 'Bisacodyl', 'Senna', 'Mesalamine', 'Sulfasalazine', 'Dicyclomine', 'Hyoscine Butylbromide', 'Mebeverine', 'Pinaverium', 'Trimebutine', 'Ursodeoxycholic Acid', 'Orlistat', 'Amlodipine', 'Nifedipine', 'Felodipine', 'Lercanidipine', 'Diltiazem', 'Verapamil', 'Bisoprolol', 'Metoprolol', 'Atenolol', 'Carvedilol', 'Nebivolol', 'Propranolol', 'Sotalol', 'Enalapril', 'Lisinopril', 'Ramipril', 'Perindopril', 'Captopril', 'Losartan', 'Valsartan', 'Telmisartan', 'Irbesartan', 'Candesartan', 'Olmesartan', 'Hydrochlorothiazide', 'Chlorthalidone', 'Indapamide', 'Furosemide', 'Torsemide', 'Spironolactone', 'Eplerenone', 'Acetazolamide', 'Digoxin', 'Amiodarone', 'Flecainide', 'Propafenone', 'Ivabradine', 'Ranolazine', 'Isosorbide Mononitrate', 'Isosorbide Dinitrate', 'Clopidogrel', 'Ticagrelor', 'Prasugrel', 'Warfarin', 'Rivaroxaban', 'Apixaban', 'Dabigatran', 'Atorvastatin', 'Rosuvastatin', 'Simvastatin', 'Pravastatin', 'Fenofibrate', 'Gemfibrozil', 'Ezetimibe', 'Metformin', 'Glimepiride', 'Gliclazide', 'Glibenclamide', 'Glipizide', 'Sitagliptin', 'Vildagliptin', 'Linagliptin', 'Saxagliptin', 'Alogliptin', 'Empagliflozin', 'Dapagliflozin', 'Canagliflozin', 'Pioglitazone', 'Acarbose', 'Repaglinide', 'Nateglinide', 'Levothyroxine', 'Carbimazole', 'Methimazole', 'Propylthiouracil', 'Prednisolone', 'Dexamethasone', 'Methylprednisolone', 'Deflazacort', 'Hydrocortisone', 'Betamethasone', 'Montelukast', 'Zafirlukast', 'Theophylline', 'Aminophylline', 'Bambuterol', 'Terbutaline', 'Formoterol', 'Salmeterol', 'Fluticasone', 'Budesonide', 'Beclometasone', 'Mometasone', 'Tiotropium', 'Ipratropium', 'Glycopyrronium', 'Roflumilast', 'Acetylcysteine', 'Ambroxol', 'Bromhexine', 'Guaifenesin', 'Dextromethorphan', 'Cetirizine', 'Levocetirizine', 'Loratadine', 'Desloratadine', 'Fexofenadine', 'Chlorpheniramine', 'Diphenhydramine', 'Promethazine', 'Hydroxyzine', 'Cyproheptadine', 'Ketotifen', 'Rupatadine', 'Bilastine', 'Ebastine', 'Sertraline', 'Fluoxetine', 'Escitalopram', 'Citalopram', 'Paroxetine', 'Fluvoxamine', 'Venlafaxine', 'Duloxetine', 'Desvenlafaxine', 'Amitriptyline', 'Nortriptyline', 'Imipramine', 'Clomipramine', 'Mirtazapine', 'Bupropion', 'Trazodone', 'Buspirone', 'Zolpidem', 'Zopiclone', 'Sodium Valproate', 'Carbamazepine', 'Oxcarbazepine', 'Lamotrigine', 'Levetiracetam', 'Topiramate', 'Gabapentin', 'Pregabalin', 'Phenytoin', 'Phenobarbital', 'Clobazam', 'Lacosamide', 'Sumatriptan', 'Rizatriptan', 'Flunarizine', 'Betahistine', 'Cinnarizine', 'Baclofen', 'Tizanidine', 'Cyclobenzaprine', 'Methocarbamol', 'Orphenadrine', 'Thiocolchicoside', 'Tolperisone', 'Allopurinol', 'Febuxostat', 'Colchicine', 'Probenecid', 'Alendronate', 'Risedronate', 'Ibandronate', 'Raloxifene', 'Calcium Carbonate', 'Calcium Citrate', 'Cholecalciferol', 'Ergocalciferol', 'Ferrous Sulfate', 'Ferrous Fumarate', 'Ferrous Ascorbate', 'Folic Acid', 'Cyanocobalamin', 'Methylcobalamin', 'Pyridoxine', 'Thiamine', 'Riboflavin', 'Niacinamide', 'Biotin', 'Ascorbic Acid', 'Zinc Sulfate', 'Magnesium Oxide', 'Vitamin A', 'Vitamin E', 'Vitamin K1', 'Selenium', 'Albendazole', 'Mebendazole', 'Ivermectin', 'Praziquantel', 'Pyrantel Pamoate', 'Niclosamide', 'Acyclovir', 'Valacyclovir', 'Famciclovir', 'Oseltamivir', 'Fluconazole', 'Itraconazole', 'Ketoconazole', 'Terbinafine', 'Griseofulvin', 'Clotrimazole', 'Miconazole', 'Hydroxychloroquine', 'Chloroquine', 'Artemether', 'Lumefantrine', 'Atovaquone', 'Proguanil', 'Primaquine', 'Permethrin', 'Tamsulosin', 'Alfuzosin', 'Silodosin', 'Doxazosin', 'Terazosin', 'Finasteride', 'Dutasteride', 'Oxybutynin', 'Solifenacin', 'Tolterodine', 'Mirabegron', 'Sildenafil', 'Tadalafil', 'Vardenafil', 'Norethisterone', 'Medroxyprogesterone', 'Clomiphene', 'Tranexamic Acid', 'Desmopressin', 'Oxytocin', 'Potassium Citrate', 'Sodium Bicarbonate', 'Coenzyme Q10', 'L Carnitine', 'Alpha Lipoic Acid', 'Acetyl L Carnitine', 'Pancreatin', 'Racecadotril', 'Paracetamol Pediatric Suspension', 'Ibuprofen Pediatric Suspension', 'Amoxicillin Pediatric Suspension', 'Amoxicillin Clavulanate Suspension', 'Azithromycin Suspension', 'Cefixime Suspension', 'Cefuroxime Suspension', 'Cephalexin Suspension', 'Cephradine Suspension', 'Cefaclor Suspension', 'Clarithromycin Suspension', 'Erythromycin Suspension', 'Metronidazole Suspension', 'Tinidazole Suspension', 'Co-trimoxazole Suspension', 'Nystatin Oral Suspension', 'Fluconazole Oral Suspension', 'Albendazole Suspension', 'Mebendazole Suspension', 'Lactulose Syrup', 'Sodium Picosulfate Syrup', 'Domperidone Suspension', 'Metoclopramide Syrup', 'Ondansetron Syrup', 'Omeprazole Suspension', 'Magnesium Hydroxide Suspension', 'Aluminium Hydroxide Suspension', 'Gaviscon Suspension', 'Simethicone Suspension', 'Dicyclomine Syrup', 'Mebeverine Suspension', 'Loperamide Suspension', 'Cetirizine Syrup', 'Levocetirizine Syrup', 'Loratadine Syrup', 'Desloratadine Syrup', 'Fexofenadine Suspension', 'Chlorpheniramine Syrup', 'Diphenhydramine Syrup', 'Promethazine Syrup', 'Hydroxyzine Syrup', 'Cyproheptadine Syrup', 'Ketotifen Syrup', 'Montelukast Syrup', 'Salbutamol Syrup', 'Terbutaline Syrup', 'Theophylline Syrup', 'Aminophylline Syrup', 'Bromhexine Syrup', 'Ambroxol Syrup', 'Guaifenesin Syrup', 'Dextromethorphan Syrup', 'Acetylcysteine Syrup', 'Carbocisteine Syrup', 'Levosalbutamol Syrup', 'Expectorant Syrup', 'Iron Polymaltose Syrup', 'Ferrous Sulfate Syrup', 'Folic Acid Syrup', 'Multivitamin Syrup', 'Vitamin B Complex Syrup', 'Vitamin C Syrup', 'Calcium Syrup', 'Calcium Vitamin D Suspension', 'Zinc Sulfate Syrup', 'Magnesium Hydroxide Syrup', 'Potassium Citrate Syrup', 'ORS Oral Solution', 'Chloral Hydrate Syrup', 'Sodium Valproate Syrup', 'Carbamazepine Syrup', 'Levetiracetam Oral Solution', 'Lactulose Oral Solution', 'Ursodeoxycholic Acid Suspension', 'Mesalamine Suspension', 'Prednisolone Syrup', 'Dexamethasone Oral Solution', 'Methylprednisolone Oral Solution', 'Sodium Bicarbonate Oral Solution', 'Potassium Chloride Oral Solution', 'Oral Rehydration Solution', 'Povidone Iodine Gargle', 'Chlorhexidine Mouthwash', 'Benzydamine Mouthwash', 'Lidocaine Oral Solution', 'Paracetamol IV', 'Diclofenac Injection', 'Ketorolac Injection', 'Tramadol Injection', 'Metoclopramide Injection', 'Ondansetron Injection', 'Pantoprazole IV', 'Esomeprazole IV', 'Omeprazole IV', 'Famotidine Injection', 'Hyoscine Butylbromide Injection', 'Diclofenac IV', 'Ketoprofen Injection', 'Methylprednisolone Injection', 'Dexamethasone Injection', 'Hydrocortisone Injection', 'Prednisolone Injection', 'Betamethasone Injection', 'Ceftriaxone IV', 'Cefotaxime IV', 'Ceftazidime IV', 'Cefepime IV', 'Cefuroxime IV', 'Meropenem IV', 'Imipenem Cilastatin IV', 'Ertapenem IV', 'Piperacillin Tazobactam IV', 'Ampicillin IV', 'Amoxicillin Clavulanate IV', 'Flucloxacillin IV', 'Cloxacillin IV', 'Benzylpenicillin IV', 'Clindamycin IV', 'Metronidazole IV', 'Ciprofloxacin IV', 'Levofloxacin IV', 'Moxifloxacin IV', 'Acyclovir IV', 'Ganciclovir IV', 'Fluconazole IV', 'Amphotericin B IV', 'Vancomycin IV', 'Teicoplanin IV', 'Linezolid IV', 'Gentamicin IV', 'Amikacin IV', 'Tobramycin IV', 'Netilmicin IV', 'Streptomycin Injection', 'Colistin IV', 'Azithromycin IV', 'Clarithromycin IV', 'Doxycycline IV', 'Rifampicin IV', 'Isoniazid IV', 'Furosemide IV', 'Bumetanide IV', 'Mannitol IV', 'Aminophylline IV', 'Salbutamol IV', 'Magnesium Sulfate IV', 'Calcium Gluconate IV', 'Calcium Chloride IV', 'Potassium Chloride IV', 'Sodium Chloride IV', 'Sodium Bicarbonate IV', 'Dextrose 5 Percent IV', 'Dextrose 10 Percent IV', 'Dextrose 25 Percent IV', 'Dextrose 50 Percent IV', 'Ringer Lactate IV', 'Normal Saline IV', 'Half Normal Saline IV', 'Human Albumin IV', 'Hydroxyethyl Starch IV', 'Heparin IV'];
+
+      commonProducts.push(...additional500.map((name, i) => {
+        const isSyrup = i >= 339 && i < 424;
+        const isIV = i >= 424;
+        return [
+          name,
+          name,
+          isIV ? "Injection" : isSyrup ? "Syrup" : "Tablet",
+          "Common pharmacy / generic"
+        ];
+      }));
+
+      // Expanded dosage-form seeds requested for the remaining pharmacy categories.
+      // These are common/generic formulation names; verify local brands and current MRPs.
+      const expandedFormSeeds = {
+        Suspension: [
+          'Paracetamol 120mg/5mL Suspension','Ibuprofen 100mg/5mL Suspension','Amoxicillin 125mg/5mL Suspension',
+          'Amoxicillin 250mg/5mL Suspension','Co-amoxiclav 228.5mg/5mL Suspension','Co-amoxiclav 457mg/5mL Suspension',
+          'Azithromycin 200mg/5mL Suspension','Cefixime 100mg/5mL Suspension','Cefixime 200mg/5mL Suspension',
+          'Cefuroxime 125mg/5mL Suspension','Cefuroxime 250mg/5mL Suspension','Cephalexin 125mg/5mL Suspension',
+          'Cephalexin 250mg/5mL Suspension','Clarithromycin 125mg/5mL Suspension','Clarithromycin 250mg/5mL Suspension',
+          'Erythromycin 125mg/5mL Suspension','Metronidazole 125mg/5mL Suspension','Albendazole 200mg/5mL Suspension',
+          'Mebendazole 100mg/5mL Suspension','Nystatin 100000IU/mL Suspension','Fluconazole 50mg/5mL Suspension',
+          'Domperidone 5mg/5mL Suspension','Ondansetron 4mg/5mL Suspension','Cetirizine 5mg/5mL Suspension',
+          'Levocetirizine 2.5mg/5mL Suspension','Fexofenadine 30mg/5mL Suspension','Montelukast 4mg/5mL Suspension',
+          'Sodium Valproate 200mg/5mL Suspension','Carbamazepine 100mg/5mL Suspension','Levetiracetam 100mg/mL Suspension'
+        ],
+        Capsule: [
+          'Amoxicillin 250mg Capsule','Amoxicillin 500mg Capsule','Flucloxacillin 250mg Capsule','Flucloxacillin 500mg Capsule',
+          'Cloxacillin 250mg Capsule','Cloxacillin 500mg Capsule','Cephalexin 250mg Capsule','Cephalexin 500mg Capsule',
+          'Cefradine 250mg Capsule','Cefradine 500mg Capsule','Cefixime 200mg Capsule','Cefixime 400mg Capsule',
+          'Cefuroxime 250mg Capsule','Cefuroxime 500mg Capsule','Doxycycline 100mg Capsule','Minocycline 100mg Capsule',
+          'Omeprazole 20mg Capsule','Esomeprazole 40mg Capsule','Pantoprazole 40mg Capsule','Rabeprazole 20mg Capsule',
+          'Lansoprazole 30mg Capsule','Duloxetine 30mg Capsule','Duloxetine 60mg Capsule','Fluoxetine 20mg Capsule',
+          'Sertraline 50mg Capsule','Pregabalin 75mg Capsule','Pregabalin 150mg Capsule','Gabapentin 300mg Capsule',
+          'Itraconazole 100mg Capsule','Itraconazole 200mg Capsule'
+        ],
+        Cream: [
+          'Clotrimazole 1% Cream','Miconazole 2% Cream','Ketoconazole 2% Cream','Terbinafine 1% Cream',
+          'Hydrocortisone 1% Cream','Betamethasone 0.1% Cream','Mometasone 0.1% Cream','Clobetasol 0.05% Cream',
+          'Fusidic Acid 2% Cream','Mupirocin 2% Cream','Acyclovir 5% Cream','Permethrin 5% Cream',
+          'Povidone Iodine 5% Cream','Silver Sulfadiazine 1% Cream','Diclofenac 1% Cream','Ketoprofen 2.5% Cream',
+          'Ketoconazole + Clobetasol Cream','Clotrimazole + Betamethasone Cream','Hydrocortisone + Clotrimazole Cream','Lidocaine 2% Cream',
+          'Benzoyl Peroxide 2.5% Cream','Benzoyl Peroxide 5% Cream','Tretinoin 0.025% Cream','Tretinoin 0.05% Cream',
+          'Adapalene 0.1% Cream','Azelaic Acid 20% Cream','Urea 10% Cream','Urea 20% Cream',
+          'Calamine Cream','Emollient Moisturizing Cream'
+        ],
+        Gel: [
+          'Diclofenac 1% Gel','Diclofenac 2% Gel','Ketoprofen 2.5% Gel','Ibuprofen 5% Gel',
+          'Piroxicam 0.5% Gel','Ketorolac 2% Gel','Methyl Salicylate Gel','Heparinoid Gel',
+          'Heparin Sodium Gel','Lidocaine 2% Gel','Benzocaine 20% Gel','Metronidazole 0.75% Gel',
+          'Clindamycin 1% Gel','Adapalene 0.1% Gel','Adapalene 0.3% Gel','Benzoyl Peroxide 2.5% Gel',
+          'Benzoyl Peroxide 5% Gel','Clindamycin + Adapalene Gel','Clindamycin + Benzoyl Peroxide Gel','Ketoconazole 2% Gel',
+          'Miconazole 2% Gel','Acyclovir 5% Gel','Mupirocin 2% Gel','Povidone Iodine Gel',
+          'Diclofenac + Methyl Salicylate Gel','Diclofenac + Menthol Gel','Etoricoxib Topical Gel','Aloe Vera Gel',
+          'Oral Ulcer Choline Salicylate Gel','Chlorhexidine Oral Gel'
+        ],
+        Ointment: [
+          'Mupirocin 2% Ointment','Fusidic Acid 2% Ointment','Clotrimazole 1% Ointment','Miconazole 2% Ointment',
+          'Ketoconazole 2% Ointment','Terbinafine 1% Ointment','Acyclovir 5% Ointment','Hydrocortisone 1% Ointment',
+          'Betamethasone 0.1% Ointment','Clobetasol 0.05% Ointment','Mometasone 0.1% Ointment','Tacrolimus 0.03% Ointment',
+          'Tacrolimus 0.1% Ointment','Pimecrolimus 1% Ointment','Permethrin 5% Ointment','Zinc Oxide Ointment',
+          'Calamine Ointment','Povidone Iodine Ointment','Silver Sulfadiazine 1% Ointment','Petrolatum Ointment',
+          'Bacitracin Ointment','Neomycin Ointment','Neomycin + Bacitracin Ointment','Ichthammol Ointment',
+          'Salicylic Acid 5% Ointment','Urea 10% Ointment','Urea 20% Ointment','Diclofenac 1% Ointment',
+          'Nitroglycerin 0.2% Ointment','Nystatin Ointment'
+        ],
+        Liquid: [
+          'Paracetamol Oral Liquid','Ibuprofen Oral Liquid','Lactulose Oral Liquid','Sodium Picosulfate Oral Liquid',
+          'Magnesium Hydroxide Oral Liquid','Aluminium Hydroxide Oral Liquid','Simethicone Oral Liquid','Glycerin Oral Liquid',
+          'Sodium Chloride Nasal Liquid','Povidone Iodine Liquid','Chlorhexidine Liquid','Hydrogen Peroxide 3% Liquid',
+          'Isopropyl Alcohol 70% Liquid','Ethanol 70% Liquid','Calamine Liquid','Boric Acid Liquid',
+          'Salbutamol Oral Liquid','Terbutaline Oral Liquid','Theophylline Oral Liquid','Aminophylline Oral Liquid',
+          'Sodium Valproate Oral Liquid','Levetiracetam Oral Liquid','Potassium Citrate Oral Liquid','Sodium Bicarbonate Oral Liquid',
+          'Potassium Chloride Oral Liquid','Iron Polymaltose Oral Liquid','Ferrous Sulfate Oral Liquid','Multivitamin Oral Liquid',
+          'Vitamin B Complex Oral Liquid','Zinc Sulfate Oral Liquid'
+        ],
+        Sachet: [
+          'Oral Rehydration Salts Sachet','Paracetamol Sachet','Ibuprofen Sachet','Diclofenac Sachet',
+          'Nimesulide Sachet','Ketoprofen Sachet','Esomeprazole Sachet','Omeprazole Sachet',
+          'Lansoprazole Sachet','Rabeprazole Sachet','Sucralfate Sachet','Macrogol Sachet',
+          'Polyethylene Glycol Sachet','Psyllium Husk Sachet','Ispaghula Husk Sachet','Lactulose Powder Sachet',
+          'Sodium Picosulfate Sachet','Potassium Citrate Sachet','Sodium Bicarbonate Sachet','Calcium Carbonate Sachet',
+          'Calcium + Vitamin D Sachet','Magnesium Citrate Sachet','Magnesium Oxide Sachet','Zinc Sulfate Sachet',
+          'Vitamin C Sachet','Vitamin B Complex Sachet','Multivitamin Sachet','Iron + Folic Acid Sachet',
+          'N-Acetylcysteine Sachet','Probiotic Sachet'
+        ],
+        Powder: [
+          'Amoxicillin Powder for Suspension','Amoxicillin + Clavulanate Powder for Suspension','Cefixime Powder for Suspension','Cefuroxime Powder for Suspension',
+          'Cephalexin Powder for Suspension','Azithromycin Powder for Suspension','Clarithromycin Powder for Suspension','Erythromycin Powder for Suspension',
+          'Metronidazole Powder for Suspension','Fluconazole Powder for Suspension','Nystatin Oral Powder','Cholestyramine Powder',
+          'Psyllium Husk Powder','Ispaghula Husk Powder','Macrogol Powder','Polyethylene Glycol Powder',
+          'Oral Rehydration Powder','Zinc Sulfate Powder','Calcium Carbonate Powder','Calcium + Vitamin D Powder',
+          'Magnesium Oxide Powder','Potassium Citrate Powder','Sodium Bicarbonate Powder','Sodium Chloride Powder',
+          'Iron Polymaltose Powder','Ferrous Sulfate Powder','Folic Acid Powder','Vitamin C Powder',
+          'Vitamin B Complex Powder','Probiotic Powder'
+        ],
+        Inhaler: [
+          'Salbutamol Inhaler','Levosalbutamol Inhaler','Ipratropium Inhaler','Tiotropium Inhaler',
+          'Budesonide Inhaler','Beclometasone Inhaler','Fluticasone Inhaler','Mometasone Inhaler',
+          'Salmeterol Inhaler','Formoterol Inhaler','Indacaterol Inhaler','Glycopyrronium Inhaler',
+          'Umeclidinium Inhaler','Aclidinium Inhaler','Vilanterol Inhaler','Olodaterol Inhaler',
+          'Budesonide + Formoterol Inhaler','Fluticasone + Salmeterol Inhaler','Fluticasone + Vilanterol Inhaler','Beclometasone + Formoterol Inhaler',
+          'Budesonide + Glycopyrronium + Formoterol Inhaler','Tiotropium + Olodaterol Inhaler','Ipratropium + Salbutamol Inhaler','Ipratropium + Fenoterol Inhaler',
+          'Salmeterol + Fluticasone Inhaler','Mometasone + Formoterol Inhaler','Ciclesonide Inhaler','Ciclesonide + Formoterol Inhaler',
+          'Acetylcysteine Inhalation Solution','Sodium Chloride Nebulizer Solution'
+        ]
+      };
+
+      Object.entries(expandedFormSeeds).forEach(([form, names]) => {
+        names.forEach(name => {
+          commonProducts.push([name, name.replace(/\s+(Sache(t)?|Powder for Suspension|Inhaler|Liquid|Gel|Cream|Ointment|Suspension|Capsule)$/i, ''), form, 'Common pharmacy / generic']);
+        });
+      });
+
+      const generated = [];
+      const seenBrands = new Set();
+
+      for (let p = 0; p < commonProducts.length; p++) {
+        const [brand, generic, form, manufacturer] = commonProducts[p];
+        const brandKey = getBrandKey(brand);
+        if (seenBrands.has(brandKey)) continue;
+        seenBrands.add(brandKey);
+
+        const packCount = 10;
+        const price = parseFloat((30 + (p * 7.5) % 180).toFixed(2));
+
+        generated.push({
+          id: "pkr_item_" + String(generated.length + 1).padStart(4, "0"),
+          name: brand,
+          formType: form,
+          category: form === "Injection" ? "IV" : form === "Syrup" ? "SYRUP" : ['Suspension','Capsule','Cream','Gel','Ointment','Liquid','Sachet','Powder','Inhaler'].includes(form) ? form : "TAB",
+          genericName: generic,
+          manufacturer,
+          pataPrice: price,
+          tabletsPerPata: packCount,
+          stripsPerBox: 10,
+          totalTabsBox: 100,
+          boxPrice: parseFloat((price * 10).toFixed(2)),
+          tabletPrice: parseFloat((price / packCount).toFixed(2)),
+          stock: null,
+          notes: `Common Pakistani brand item. Manufacturer: ${manufacturer}.`,
+          image: "",
+          createdAt: new Date(Date.now() - (generated.length * 60000)).toISOString()
+        });
+      }
+
+      return generated;
+    }
+
+    window.onload = function() {
+      loadLocalStorage();
+      loadUserProfile();
+      renderCategoryPills();
+      renderMedicineList();
+      populateCalcDropdown();
+      updateStatsScreen();
+      calculateStorageUsage();
+      lucide.createIcons();
+    };
+
+    function saveToLocalStorage() {
+      localStorage.setItem('mediprice_pkr_db', JSON.stringify(medicines));
+      localStorage.setItem('mediprice_sales_db', JSON.stringify(salesHistory));
+      updateStatsScreen();
+      populateCalcDropdown();
+      calculateStorageUsage();
+    }
+
+    function loadLocalStorage() {
+      const storedMeds = localStorage.getItem('mediprice_pkr_db');
+      let shouldRegenerate = false;
+
+      if (storedMeds) {
+        try {
+          const parsed = JSON.parse(storedMeds);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            medicines = parsed;
+          } else {
+            shouldRegenerate = true;
+          }
+        } catch (e) {
+          shouldRegenerate = true;
+        }
+      } else {
+        shouldRegenerate = true;
+      }
+
+      if (shouldRegenerate) {
+        medicines = generatePakistaniMedsWithSeeds();
+      } else {
+        // Upgrade existing installs without deleting the user's saved stock/sales.
+        const existingSeedIds = new Set(medicines.map(m => m.id));
+        const upgradeSeed = generatePakistaniMedsWithSeeds().filter(m => m.id.startsWith('pkr_item_'));
+        // Append the expanded seed records; existing records remain untouched.
+        const newSeedRecords = upgradeSeed.slice(89);
+        newSeedRecords.forEach((m, i) => {
+          const newId = "extra_pk_" + String(i + 1).padStart(4, "0");
+          if (!existingSeedIds.has(newId)) medicines.push({...m, id: newId});
+        });
+      }
+
+      // Normalize legacy category names so the new quick filters work.
+      // Also ensure every medicine has complete box pricing + total tablets data.
+      medicines.forEach(m => {
+        if (m.category === 'Tablets') m.category = 'TAB';
+        if (m.category === 'Syrups') m.category = 'SYRUP';
+        if (m.formType === 'Injection' && !m.category) m.category = 'IV';
+
+        const pataPrice = Number(m.pataPrice || 0);
+        const stripsPerBox = Number(m.stripsPerBox || 0) || 10;
+        const tabletsPerPata = Number(m.tabletsPerPata || 0) || 10;
+        const totalTabsBox = Number(m.totalTabsBox || 0) || (stripsPerBox * tabletsPerPata);
+        const boxPrice = Number(m.boxPrice || 0) || (pataPrice * stripsPerBox);
+
+        m.stripsPerBox = stripsPerBox;
+        m.tabletsPerPata = tabletsPerPata;
+        m.totalTabsBox = totalTabsBox;
+        m.boxPrice = parseFloat(boxPrice.toFixed(2));
+        if (!Number(m.tabletPrice || 0) && totalTabsBox > 0 && boxPrice > 0) {
+          m.tabletPrice = parseFloat((boxPrice / totalTabsBox).toFixed(2));
+        }
+      });
+
+      // Perform deduplication upon initial load
+      removeDuplicateMedicines(true);
+
+      const storedSales = localStorage.getItem('mediprice_sales_db');
+      if (storedSales) {
+        try {
+          salesHistory = JSON.parse(storedSales);
+        } catch (e) {
+          salesHistory = [];
+        }
+      } else {
+        salesHistory = [];
+      }
+
+      saveToLocalStorage();
+    }
+
+    // Category Pills + fast TAB/SYRUP/IV filters
+    function renderFormQuickFilters() {
+      const container = document.getElementById('form-filter-row');
+      if (!container) return;
+      const forms = [
+        { key: 'ALL', label: 'ALL', icon: 'layers-3' },
+        { key: 'Tablet', label: 'TAB', icon: 'pill' },
+        { key: 'Syrup', label: 'SYRUP', icon: 'flask-conical' },
+        { key: 'Injection', label: 'IV', icon: 'syringe' },
+        { key: 'Suspension', label: 'Suspension', icon: 'beaker' },
+        { key: 'Capsule', label: 'Capsule', icon: 'pill' },
+        { key: 'Cream', label: 'Cream', icon: 'droplets' },
+        { key: 'Gel', label: 'Gel', icon: 'waves' },
+        { key: 'Ointment', label: 'Ointment', icon: 'hand' },
+        { key: 'Liquid', label: 'Liquid', icon: 'droplet' },
+        { key: 'Sachet', label: 'Sachet', icon: 'package' },
+        { key: 'Powder', label: 'Powder', icon: 'box' },
+        { key: 'Inhaler', label: 'Inhaler', icon: 'wind' }
+      ];
+      container.innerHTML = forms.map(f => {
+        const selected = f.key === 'ALL' ? selectedCategory === 'ALL' : selectedCategory === 'FORM:' + f.key;
+        const count = f.key === 'ALL'
+          ? medicines.length
+          : medicines.filter(m => (m.formType || 'Tablet') === f.key).length;
+        const active = selected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50';
+        return `<button type="button" onclick="filterFormType('${f.key}')"
+          class="flex-shrink-0 min-w-[78px] px-2.5 py-2 rounded-xl border ${active} transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95">
+          <span class="flex items-center gap-1 text-[10px] font-extrabold whitespace-nowrap"><i data-lucide="${f.icon}" class="w-3.5 h-3.5"></i>${f.label}</span>
+          <span class="text-[9px] opacity-75 font-semibold">${count.toLocaleString()}</span>
+        </button>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function renderHomeDashboard() {
+      const count = medicines.length;
+      const categories = new Set(medicines.map(m => m.category || 'Other'));
+      const stock = medicines.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
+      const stockValue = medicines.reduce((sum, m) => {
+        const qty = Number(m.stock) || 0;
+        const price = Number(m.pataPrice) || 0;
+        return sum + (qty * price);
+      }, 0);
+      const byId = (id) => document.getElementById(id);
+      if (byId('dash-medicine-count')) byId('dash-medicine-count').textContent = count.toLocaleString();
+      if (byId('dash-category-count')) byId('dash-category-count').textContent = categories.size.toLocaleString();
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+      if (byId('home-greeting')) byId('home-greeting').textContent = greeting;
+    }
+
+    function renderCategoryPills() {
+      const categories = ['ALL', ...new Set(medicines.map(m => m.category || 'Other'))];
+      const container = document.getElementById('category-pills');
+      container.innerHTML = categories.map(cat => {
+        const isSelected = selectedCategory === cat;
+        return `
+          <button onclick="filterCategory('${escapeHtml(cat)}')" class="flex-shrink-0 min-w-[110px] min-h-[38px] px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition text-center ${isSelected ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'}">
+            ${escapeHtml(cat)}
+          </button>`;
+      }).join('');
+    }
+
+    function filterCategory(cat) {
+      selectedCategory = cat;
+      renderCategoryPills();
+      renderMedicineList();
+    }
+
+    function filterFormType(formType) {
+      selectedCategory = formType === 'ALL' ? 'ALL' : 'FORM:' + formType;
+      renderCategoryPills();
+      renderMedicineList();
+    }
+
+    function medicineAutoImage(med) {
+      // Creates a medicine-specific visual pack when no user photo is attached.
+      // Uploaded medicine photos always take priority.
+      const name = String(med?.name || 'Medicine').trim();
+      const generic = String(med?.generic || med?.composition || '').trim();
+      const form = String(med?.form || med?.type || 'Tablet').trim();
+      const strength = String(med?.strength || '').trim();
+      const key = (name + '|' + generic + '|' + form).toLowerCase();
+      let hash = 0; for (let i=0;i<key.length;i++) hash = ((hash<<5)-hash)+key.charCodeAt(i) | 0;
+      const hue = Math.abs(hash) % 360;
+      const safe = v => escapeHtml(String(v).replace(/&/g,'&amp;'));
+      const shortName = name.length > 22 ? name.slice(0,22) + '…' : name;
+      const sub = strength || (generic.length > 28 ? generic.slice(0,28) + '…' : generic) || form;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="330" viewBox="0 0 500 330">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},55%,94%)"/><stop offset="1" stop-color="hsl(${(hue+32)%360},48%,88%)"/></linearGradient></defs>
+        <rect width="500" height="330" rx="34" fill="url(#g)"/>
+        <rect x="62" y="55" width="376" height="220" rx="18" fill="#fff" stroke="hsl(${hue},35%,78%)" stroke-width="4"/>
+        <rect x="62" y="55" width="376" height="48" rx="18" fill="hsl(${hue},58%,42%)"/>
+        <circle cx="100" cy="79" r="12" fill="#fff" opacity=".95"/><text x="122" y="86" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#fff">PHARMACY</text>
+        <text x="88" y="155" font-family="Arial,sans-serif" font-size="25" font-weight="800" fill="#173b36">${safe(shortName)}</text>
+        <text x="88" y="185" font-family="Arial,sans-serif" font-size="17" fill="#55716c">${safe(sub)}</text>
+        <g transform="translate(365 205) rotate(-18)"><rect x="-46" y="-17" width="92" height="34" rx="17" fill="hsl(${hue},58%,42%)"/><path d="M0-17v34" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="23" cy="0" r="5" fill="#fff" opacity=".85"/></g>
+        <text x="88" y="237" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#0b9275">${safe(form.toUpperCase())}</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    function renderMedicineList() {
+      renderHomeDashboard();
+      const listContainer = document.getElementById('medicine-list');
+      const emptyState = document.getElementById('empty-state');
+      const searchVal = (document.getElementById('search-input').value || '').toLowerCase().trim();
+      const sortVal = document.getElementById('sort-select').value;
+
+      let filtered = medicines.filter(m => {
+        const matchesCategory =
+          selectedCategory === 'ALL' ||
+          (selectedCategory.startsWith('FORM:') && (m.formType || 'Tablet') === selectedCategory.slice(5)) ||
+          m.category === selectedCategory;
+        const matchesSearch = !searchVal || m.name.toLowerCase().includes(searchVal) || (m.notes && m.notes.toLowerCase().includes(searchVal)) || (m.formType && m.formType.toLowerCase().includes(searchVal));
+        return matchesCategory && matchesSearch;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        if (sortVal === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortVal === 'unit-low') return (a.tabletPrice || 0) - (b.tabletPrice || 0);
+        if (sortVal === 'pack-low') return (a.pataPrice || 0) - (b.pataPrice || 0);
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
+
+      document.getElementById('med-count-badge').textContent = `${filtered.length.toLocaleString()} items found`;
+
+      if (filtered.length === 0) {
+        listContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      const displayItems = filtered.slice(0, 100);
+
+      listContainer.innerHTML = displayItems.map(med => {
+        const isSelected = selectedMedIds.has(med.id);
+        const formType = med.formType || 'Tablet';
+        const packLabel = formType === 'Tablet' ? 'Pata' : formType === 'Syrup' ? 'Bottle' : 'Pack';
+        const unitLabel = 'Tablet';
+        const initials = escapeHtml((med.name || '?').trim().charAt(0).toUpperCase());
+        const tabs = Number(med.tabletsPerPata || med.tabletsPerPack || med.tabletsPerBox || 0);
+        const packPrice = Number(med.pataPrice || 0);
+        const tabletPrice = Number(med.tabletPrice || 0);
+        const boxPrice = Number(med.boxPrice || 0);
+        const generic = med.notes ? String(med.notes).split(',')[0].trim() : (med.generic || 'Medicine');
+
+        return `
+          <div class="mp-medicine-card group ${isSelected ? 'mp-card-selected' : ''}">
+            <div class="mp-card-glow"></div>
+            ${isBulkSelectMode ? `
+              <div class="mp-select-wrap">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectMed('${med.id}', this.checked)" class="w-5 h-5 accent-emerald-600 rounded cursor-pointer">
+              </div>
+            ` : ''}
+
+            <div class="mp-card-top">
+              <span class="mp-form-badge ${getFormBadgeClass(formType)}">${escapeHtml(formType)}</span>
+              <button type="button" onclick="openDetailsModal('${med.id}')" class="mp-more" aria-label="More details">
+                <i data-lucide="more-vertical" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <div onclick="openDetailsModal('${med.id}')" class="mp-product-image cursor-pointer">
+              <img src="${med.image || medicineAutoImage(med)}" alt="${escapeHtml(med.name)}" loading="lazy">
+            </div>
+
+            <div onclick="openDetailsModal('${med.id}')" class="mp-card-info cursor-pointer">
+              <h3 title="${escapeHtml(med.name)}">${escapeHtml(med.name)}</h3>
+              <p class="mp-generic">${escapeHtml(generic || 'Medicine')}</p>
+            </div>
+
+            <div class="mp-card-actions">
+              <button type="button" onclick="switchTab('calc'); setTimeout(()=>{ const s=document.getElementById('calc-med-select'); if(s){s.value='${med.id}'; updateCalcDetails();}},80)" class="mp-calc-btn mp-calc-btn-compact">
+                <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Calculator</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (filtered.length > 100) {
+        listContainer.innerHTML += `
+          <div class="text-center py-3 text-xs text-slate-400 font-medium">
+            Showing top 100 results of ${filtered.length.toLocaleString()} medicines. Use search to narrow down further.
+          </div>
+        `;
+      }
+
+      lucide.createIcons();
+    }
+
+    function getFormBadgeClass(type) {
+      if (type === 'Syrup') return 'bg-amber-100 text-amber-800';
+      if (type === 'Injection') return 'bg-purple-100 text-purple-800';
+      if (type === 'Ointment') return 'bg-blue-100 text-blue-800';
+      if (type === 'Drops') return 'bg-cyan-100 text-cyan-800';
+      return 'bg-emerald-100 text-emerald-800';
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Navigation and Tab switching
+    function switchTab(tab) {
+      activeTab = tab;
+      try { localStorage.setItem('mediprice_active_tab', tab); } catch (e) {}
+      ['home', 'add', 'calc', 'stats', 'profile'].forEach(t => {
+        const sec = document.getElementById(`screen-${t}`);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (sec) sec.classList.add('hidden');
+        if (navBtn) {
+          navBtn.classList.remove('text-emerald-600');
+          navBtn.classList.add('text-slate-400');
+        }
+      });
+
+      const currentSec = document.getElementById(`screen-${tab}`);
+      const currentNav = document.getElementById(`nav-${tab}`);
+      if (currentSec) currentSec.classList.remove('hidden');
+      if (currentNav) {
+        currentNav.classList.remove('text-slate-400');
+        currentNav.classList.add('text-emerald-600');
+      }
+
+      if (tab === 'calc') populateCalcDropdown();
+      if (tab === 'stats') updateStatsScreen();
+      lucide.createIcons();
+    }
+
+    // Modal Details View
+    let currentDetailsMedicineId = null;
+
+    function getMedicinePlaces() {
+      const places = [];
+      ['R', 'L'].forEach(prefix => {
+        for (let row = 1; row <= 3; row++) {
+          for (let slot = 1; slot <= 7; slot++) places.push(`${prefix}${row}.${slot}`);
+        }
+      });
+      for (let slot = 1; slot <= 7; slot++) places.push(`B1.${slot}`);
+      return places;
+    }
+
+    function populateMedicinePlaces(selectedPlace = '') {
+      const select = document.getElementById('modal-place-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select Place</option>' + getMedicinePlaces().map(place => `<option value="${place}">${place}</option>`).join('');
+      select.value = selectedPlace || '';
+    }
+
+    function populateEditMedicinePlaces(selectedPlace = '') {
+      const select = document.getElementById('med-place');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select Place</option>' + getMedicinePlaces().map(place => `<option value="${place}">${place}</option>`).join('');
+      select.value = selectedPlace || '';
+    }
+
+    function saveMedicinePlace() {
+      if (!currentDetailsMedicineId) return;
+      const med = medicines.find(m => m.id === currentDetailsMedicineId);
+      const select = document.getElementById('modal-place-select');
+      if (!med || !select) return;
+      med.place = select.value;
+      saveToLocalStorage();
+      showToast(select.value ? `Place ${select.value} saved.` : 'Place cleared.');
+    }
+
+    function openDetailsModal(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) return;
+      currentDetailsMedicineId = id;
+
+      const formType = med.formType || 'Tablet';
+      const packLabel = formType === 'Tablet' ? 'Pata' : formType === 'Syrup' ? 'Bottle' : 'Pack';
+
+      document.getElementById('modal-title').textContent = med.name;
+      document.getElementById('modal-form-tag').textContent = formType;
+      document.getElementById('modal-category-tag').textContent = med.category || 'General';
+      document.getElementById('modal-notes').textContent = med.notes || 'No dosage or medicine notes attached.';
+      document.getElementById('modal-img').src = med.image || medicineAutoImage(med);
+
+      const boxPrice = Number(med.boxPrice || 0);
+      const totalTabs = Number(med.totalTabsBox || 0) || (Number(med.stripsPerBox || 0) * Number(med.tabletsPerPata || 0));
+      document.getElementById('modal-box-price').textContent = boxPrice > 0 ? `Rs. ${boxPrice.toFixed(2)}` : 'Rs. —';
+      document.getElementById('modal-box-detail').textContent = Number(med.stripsPerBox || 0) > 0 ? `${med.stripsPerBox} patas / box` : 'Complete box';
+      document.getElementById('modal-total-tabs').textContent = totalTabs > 0 ? totalTabs.toLocaleString() : '—';
+      document.getElementById('modal-total-tabs-detail').textContent = totalTabs > 0 ? 'Tablets in box' : 'Not added';
+      document.getElementById('modal-pata-price').textContent = `Rs. ${Number(med.pataPrice || 0).toFixed(2)}`;
+      document.getElementById('modal-pata-count').textContent = `(${Number(med.tabletsPerPata || 0)} tablets / ${packLabel})`;
+      document.getElementById('modal-tablet-price').textContent = `Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
+      document.getElementById('modal-stock-text').textContent = '';
+      const modalPlaceDisplay = document.getElementById('modal-place-display');
+      if (modalPlaceDisplay) modalPlaceDisplay.textContent = med.place || 'Not assigned';
+
+      document.getElementById('modal-sell-btn').onclick = function() { closeDetailsModal(); openSellModal(id); };
+      document.getElementById('modal-calc-btn').onclick = function() { closeDetailsModal(); openCalcModal(id); };
+      document.getElementById('modal-edit-btn').onclick = function() { closeDetailsModal(); editMedicine(id); };
+      document.getElementById('modal-delete-btn').onclick = function() { closeDetailsModal(); deleteMedicine(id); };
+
+      document.getElementById('details-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function openCalcModal(id) {
+      switchTab('calc');
+      const select = document.getElementById('calc-med-select');
+      if (select) {
+        select.value = id;
+        updateCalcDetails();
+      }
+    }
+
+    function closeDetailsModal() {
+      document.getElementById('details-modal').classList.add('hidden');
+    }
+
+    // SALES TRACKING POS SYSTEM
+    function openSellModal(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) return;
+
+      currentSellMed = med;
+      const formType = med.formType || 'Tablet';
+      const packLabel = formType === 'Tablet' ? 'Pata / Strips' : 'Bottles / Packs';
+      const unitLabel = formType === 'Tablet' ? 'Loose Tablets' : 'Loose Tablets';
+
+      document.getElementById('sell-med-id').value = med.id;
+      document.getElementById('sell-med-name').textContent = med.name;
+      document.getElementById('sell-med-stock-text').textContent = '';
+      document.getElementById('sell-med-img').src = med.image || 'https://placehold.co/100x100/0d9488/ffffff?text=' + encodeURIComponent(med.name.charAt(0));
+
+      document.getElementById('sell-pack-label').textContent = packLabel;
+      document.getElementById('sell-unit-label').textContent = unitLabel;
+      document.getElementById('sell-pack-qty').value = 1;
+      document.getElementById('sell-unit-qty').value = 0;
+
+      calcSellTotal();
+      document.getElementById('sell-modal').classList.remove('hidden');
+    }
+
+    function closeSellModal() {
+      document.getElementById('sell-modal').classList.add('hidden');
+      currentSellMed = null;
+    }
+
+    function calcSellTotal() {
+      if (!currentSellMed) return;
+
+      const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
+      const units = parseFloat(document.getElementById('sell-unit-qty').value) || 0;
+
+      const totalBill = (packs * currentSellMed.pataPrice) + (units * currentSellMed.tabletPrice);
+      document.getElementById('sell-total-bill').textContent = `Rs. ${totalBill.toFixed(2)}`;
+    }
+
+    function confirmRecordSale() {
+      if (!currentSellMed) return;
+
+      const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
+      const units = parseFloat(document.getElementById('sell-unit-qty').value) || 0;
+
+      if (packs <= 0 && units <= 0) {
+        showToast('Please enter a valid quantity!');
+        return;
+      }
+
+      const totalRevenue = (packs * currentSellMed.pataPrice) + (units * currentSellMed.tabletPrice);
+
+      const saleRecord = {
+        id: 'sale_' + Date.now(),
+        medId: currentSellMed.id,
+        medName: currentSellMed.name,
+        formType: currentSellMed.formType || 'Tablet',
+        packs: packs,
+        units: units,
+        revenue: totalRevenue,
+        date: new Date().toISOString()
+      };
+
+      salesHistory.unshift(saleRecord);
+      saveToLocalStorage();
+      renderMedicineList();
+      closeSellModal();
+      showToast(`Sale recorded! Revenue: Rs. ${totalRevenue.toFixed(2)}`);
+    }
+
+    // Render Sales History & Analytics
+    function renderSalesHistory() {
+      const container = document.getElementById('sales-history-container');
+      const filter = document.getElementById('sales-filter-select').value;
+      const todayStr = new Date().toDateString();
+
+      let filtered = salesHistory;
+      if (filter === 'today') {
+        filtered = salesHistory.filter(s => new Date(s.date).toDateString() === todayStr);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-4">No sales recorded ${filter === 'today' ? 'today' : 'yet'}.</p>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(s => {
+        const d = new Date(s.date);
+        const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        let qtyText = '';
+        if (s.packs > 0) qtyText += `${s.packs} Pack/Pata `;
+        if (s.units > 0) qtyText += `${s.units} Units`;
+
+        return `
+          <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
+            <div>
+              <h5 class="font-bold text-slate-800">${escapeHtml(s.medName)}</h5>
+              <p class="text-[10px] text-slate-400">${dateStr} • ${qtyText}</p>
+            </div>
+            <div class="text-right">
+              <span class="font-bold text-emerald-700 block">Rs. ${s.revenue.toFixed(2)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function clearSalesHistoryConfirm() {
+      if (confirm('Reset all recorded sales history? This action cannot be undone.')) {
+        salesHistory = [];
+        saveToLocalStorage();
+        updateStatsScreen();
+        showToast('Sales history cleared!');
+      }
+    }
+
+    function calculatePataUnitRate() {
+      let price = parseFloat(document.getElementById('calc-price-pata')?.value) || 0;
+      let units = parseFloat(document.getElementById('calc-units-pata')?.value) || 0;
+      const boxPrice = parseFloat(document.getElementById('calc-box-price')?.value) || 0;
+      const stripsBox = parseFloat(document.getElementById('calc-strips-box')?.value) || 0;
+      const totalTabsBox = parseFloat(document.getElementById('calc-total-tabs-box')?.value) || 0;
+
+      // Automatically derive tablets per pata when total tablets and total patas are available.
+      if (totalTabsBox > 0 && stripsBox > 0) {
+        const derivedUnits = totalTabsBox / stripsBox;
+        if (Number.isFinite(derivedUnits) && derivedUnits > 0) {
+          const unitsInput = document.getElementById('calc-units-pata');
+          if (unitsInput) unitsInput.value = Number.isInteger(derivedUnits) ? derivedUnits : derivedUnits.toFixed(2);
+        }
+      }
+      units = parseFloat(document.getElementById('calc-units-pata')?.value) || 0;
+
+      // Preferred calculation: Box price ÷ total tablets = price per tablet.
+      if (boxPrice > 0 && totalTabsBox > 0) {
+        const unitPrice = boxPrice / totalTabsBox;
+        const output = document.getElementById('calc-unit-price');
+        if (output) output.textContent = unitPrice.toFixed(2);
+
+        // If strip count is known, derive strip price too.
+        if (stripsBox > 0) {
+          price = boxPrice / stripsBox;
+          const pataInput = document.getElementById('calc-price-pata');
+          if (pataInput) pataInput.value = price.toFixed(2);
+        } else if (units > 0) {
+          price = unitPrice * units;
+          const pataInput = document.getElementById('calc-price-pata');
+          if (pataInput) pataInput.value = price.toFixed(2);
+        }
+        return;
+      }
+
+      if (boxPrice > 0 && stripsBox > 0) {
+        price = boxPrice / stripsBox;
+        const pataInput = document.getElementById('calc-price-pata');
+        if (pataInput) pataInput.value = price.toFixed(2);
+      }
+      const output = document.getElementById('calc-unit-price');
+      if (!output) return;
+      output.textContent = units > 0 ? (price / units).toFixed(2) : '0.00';
+    }
+
+    // Calculator Helpers
+    function populateCalcDropdown(showResults = false) {
+      const select = document.getElementById('calc-med-select');
+      const searchInput = document.getElementById('calc-search-input');
+      const clearBtn = document.getElementById('clear-calc-search');
+      const results = document.getElementById('calc-medicine-results');
+      if (!select) return;
+
+      const filterText = searchInput ? (searchInput.value || '').toLowerCase().trim() : '';
+      if (clearBtn) clearBtn.classList.toggle('hidden', !filterText);
+
+      const selectedId = select.value;
+      const filtered = medicines.filter(m => !filterText || m.name.toLowerCase().includes(filterText) || (m.category && m.category.toLowerCase().includes(filterText))).slice(0, 100);
+
+      select.innerHTML = filtered.length ? filtered.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('') : '<option value="">No items found</option>';
+      if (selectedId && medicines.some(m => m.id === selectedId)) select.value = selectedId;
+
+      if (results) {
+        if (!showResults && document.activeElement !== searchInput) { results.classList.add('hidden'); }
+        else {
+          results.innerHTML = filtered.length ? filtered.map(m => {
+            const selected = m.id === selectedId;
+            return `<button type="button" onclick="selectCalcMedicine('${m.id}')" class="w-full text-left px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-emerald-50 ${selected ? 'bg-emerald-50' : ''}">
+              <span class="min-w-0"><span class="block text-sm font-semibold text-slate-800 truncate">${escapeHtml(m.name)}</span><span class="block text-[10px] text-slate-400 truncate">${escapeHtml(m.category || 'General')}</span></span>
+              <span class="shrink-0 text-[10px] font-bold text-emerald-700">Rs. ${Number(m.pataPrice || 0).toFixed(2)}</span>
+            </button>`;
+          }).join('') : '<div class="px-3 py-4 text-xs text-slate-400 text-center">No medicine found</div>';
+          results.classList.remove('hidden');
+        }
+      }
+
+      updateCalcDetails();
+    }
+
+    function selectCalcMedicine(id) {
+      const select = document.getElementById('calc-med-select');
+      const input = document.getElementById('calc-search-input');
+      const results = document.getElementById('calc-medicine-results');
+      const med = medicines.find(m => m.id === id);
+      if (!select || !med) return;
+      select.innerHTML = `<option value="${med.id}">${escapeHtml(med.name)}</option>`;
+      select.value = med.id;
+      if (input) input.value = med.name;
+      if (results) results.classList.add('hidden');
+      updateCalcDetails();
+    }
+
+    function clearCalcSearch() {
+      // X = clear the combined search + selection cleanly.
+      const searchInput = document.getElementById('calc-search-input');
+      const clearBtn = document.getElementById('clear-calc-search');
+      const results = document.getElementById('calc-medicine-results');
+      const select = document.getElementById('calc-med-select');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.blur();
+      }
+      if (clearBtn) clearBtn.classList.add('hidden');
+      if (results) { results.innerHTML = ''; results.classList.add('hidden'); }
+      if (select) {
+        select.innerHTML = '';
+        select.value = '';
+      }
+      // Clear auto-filled medicine/pricing details and calculation result.
+      ['calc-box-price','calc-total-tabs-box','calc-strips-box','calc-price-pata','calc-units-pata'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['calc-pata-qty','calc-tablet-qty'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '0';
+      });
+      const result = document.getElementById('calc-total-result');
+      if (result) result.textContent = 'Rs. 0.00';
+      const breakdown = document.getElementById('calc-breakdown');
+      if (breakdown) breakdown.textContent = '0 pata + 0 tablets';
+      const boxDisplay = document.getElementById('calc-box-price-display');
+      const tabsDisplay = document.getElementById('calc-total-tabs-display');
+      if (boxDisplay) boxDisplay.textContent = 'Rs. —';
+      if (tabsDisplay) tabsDisplay.textContent = '—';
+      const card = document.getElementById('calc-summary-card');
+      if (card) card.classList.add('hidden');
+      return false;
+    }
+
+    function resetCalculator() {
+      // Full Calculator reset: clear search, selection, all auto-filled values and results.
+      clearCalcSearch();
+      const results = document.getElementById('calc-medicine-results');
+      if (results) { results.innerHTML = ''; results.classList.add('hidden'); }
+      const select = document.getElementById('calc-med-select');
+      if (select) { select.innerHTML = ''; select.value = ''; }
+      const searchInput = document.getElementById('calc-search-input');
+      if (searchInput) searchInput.value = '';
+      const clearBtn = document.getElementById('clear-calc-search');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      // Leave the calculator ready for a fresh search; do not auto-select any medicine.
+      return false;
+    }
+
+    
+function updateCalcDetails() {
+      const select = document.getElementById('calc-med-select');
+      const card = document.getElementById('calc-summary-card');
+      if (!select || medicines.length === 0) return;
+
+      const med = medicines.find(m => m.id === select.value);
+      if (!med) {
+        card.classList.add('hidden');
+        document.getElementById('calc-total-result').textContent = 'Rs. 0.00';
+        return;
+      }
+
+      card.classList.remove('hidden');
+      const calcSearch = document.getElementById('calc-search-input');
+      if (calcSearch && document.activeElement !== calcSearch) calcSearch.value = med.name;
+      document.getElementById('calc-img').src = med.image || 'https://placehold.co/100x100/0d9488/ffffff?text=' + encodeURIComponent(med.name.charAt(0));
+      document.getElementById('calc-name').textContent = med.name;
+      const boxPrice = Number(med.boxPrice || 0);
+      const strips = Number(med.stripsPerBox || 0);
+      const unitsPerPata = Number(med.tabletsPerPata || 0);
+      const totalTabs = Number(med.totalTabsBox || 0) || (strips * unitsPerPata);
+      document.getElementById('calc-prices-text').textContent = `Pata: Rs. ${Number(med.pataPrice || 0).toFixed(2)} | Tablet: Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
+      document.getElementById('calc-pack-info').textContent = strips > 0 ? `${strips} pata/box • ${unitsPerPata || (totalTabs && strips ? (totalTabs/strips).toFixed(2) : '—')} tablets/pata` : 'Pack details not available';
+
+      const setVal=(id,val)=>{const el=document.getElementById(id); if(el && Number(val)>0) el.value=Number(val).toFixed(2).replace(/\.00$/,'');};
+      setVal('calc-box-price', boxPrice);
+      setVal('calc-total-tabs-box', totalTabs);
+      setVal('calc-strips-box', strips);
+      setVal('calc-price-pata', Number(med.pataPrice || 0));
+      setVal('calc-units-pata', unitsPerPata || (totalTabs && strips ? totalTabs/strips : 0));
+      calculatePataUnitRate();
+      document.getElementById('calc-box-price-display').textContent = boxPrice > 0 ? `Rs. ${boxPrice.toFixed(2)}` : 'Rs. —';
+      document.getElementById('calc-total-tabs-display').textContent = totalTabs > 0 ? totalTabs.toLocaleString() : '—';
+
+      const formType = med.formType || 'Tablet';
+      document.getElementById('calc-pata-label').textContent = formType === 'Tablet' ? 'Strips / Pata' : 'Pack / Bottle';
+      document.getElementById('calc-tablet-label').textContent = formType === 'Tablet' ? 'Loose Tablets' : 'Loose Tablets';
+
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const select = document.getElementById('calc-med-select');
+      if (!select) return;
+
+      const med = medicines.find(m => m.id === select.value);
+      if (!med) {
+        document.getElementById('calc-total-result').textContent = 'Rs. 0.00';
+        return;
+      }
+
+      const pataQty = parseFloat(document.getElementById('calc-pata-qty').value) || 0;
+      const tabQty = parseFloat(document.getElementById('calc-tablet-qty').value) || 0;
+
+      const pataRate = Number(med.pataPrice || 0);
+      let tabletRate = Number(med.tabletPrice || 0);
+      const boxPrice = Number(med.boxPrice || 0);
+      const totalTabs = Number(med.totalTabsBox || 0);
+      if (!tabletRate && boxPrice > 0 && totalTabs > 0) tabletRate = boxPrice / totalTabs;
+      const total = (pataQty * pataRate) + (tabQty * tabletRate);
+      document.getElementById('calc-total-result').textContent = `Rs. ${total.toFixed(2)}`;
+      const breakdown=document.getElementById('calc-breakdown');
+      if(breakdown) breakdown.textContent = `${pataQty} pata × Rs. ${pataRate.toFixed(2)} + ${tabQty} tablets × Rs. ${tabletRate.toFixed(2)}`;
+    }
+
+    function recordSaleFromCalc() {
+      const select = document.getElementById('calc-med-select');
+      if (!select) return;
+
+      const med = medicines.find(m => m.id === select.value);
+      if (!med) return;
+
+      const pataQty = parseFloat(document.getElementById('calc-pata-qty').value) || 0;
+      const tabQty = parseFloat(document.getElementById('calc-tablet-qty').value) || 0;
+
+      if (pataQty <= 0 && tabQty <= 0) {
+        showToast('Please enter quantities to record sale.');
+        return;
+      }
+
+      currentSellMed = med;
+      document.getElementById('sell-pack-qty').value = pataQty;
+      document.getElementById('sell-unit-qty').value = tabQty;
+      confirmRecordSale();
+    }
+
+    function autoCalcUnitPrice() {
+      const pataPrice = parseFloat(document.getElementById('med-pata-price').value) || 0;
+      const tabletsPerPata = parseInt(document.getElementById('med-tablets-per-pata').value) || 1;
+      if (pataPrice > 0 && tabletsPerPata > 0) {
+        document.getElementById('med-tablet-price').value = (pataPrice / tabletsPerPata).toFixed(2);
+      }
+    }
+
+    function autoCalcBoxPricing() {
+      const boxPrice = parseFloat(document.getElementById('med-box-price').value) || 0;
+      let stripsPerBox = parseInt(document.getElementById('med-strips-per-box').value) || 0;
+      const unitsPerStrip = parseInt(document.getElementById('med-tablets-per-pata').value) || 0;
+      let totalTabsBox = parseInt(document.getElementById('med-total-tabs-box').value) || 0;
+
+      // If total tablets + strips are provided, derive tablets per strip.
+      if (totalTabsBox > 0 && stripsPerBox > 0 && totalTabsBox % stripsPerBox === 0) {
+        const derivedUnits = totalTabsBox / stripsPerBox;
+        document.getElementById('med-tablets-per-pata').value = derivedUnits;
+      }
+
+      const finalUnitsPerStrip = parseInt(document.getElementById('med-tablets-per-pata').value) || unitsPerStrip || 1;
+
+      // Box price + total tablets is the most direct calculation.
+      if (boxPrice > 0 && totalTabsBox > 0) {
+        const tabletPrice = boxPrice / totalTabsBox;
+        document.getElementById('med-tablet-price').value = tabletPrice.toFixed(2);
+        if (stripsPerBox > 0) {
+          document.getElementById('med-pata-price').value = (boxPrice / stripsPerBox).toFixed(2);
+        } else if (finalUnitsPerStrip > 0) {
+          document.getElementById('med-pata-price').value = (tabletPrice * finalUnitsPerStrip).toFixed(2);
+        }
+        return;
+      }
+
+      if (boxPrice > 0 && stripsPerBox > 0) {
+        const stripPrice = boxPrice / stripsPerBox;
+        document.getElementById('med-pata-price').value = stripPrice.toFixed(2);
+        if (finalUnitsPerStrip > 0) {
+          document.getElementById('med-tablet-price').value = (stripPrice / finalUnitsPerStrip).toFixed(2);
+        }
+      } else {
+        autoCalcUnitPrice();
+      }
+    }
+
+    // Add / Edit Form
+    function saveMedicine(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('med-id').value;
+      const name = cleanMedicineName(document.getElementById('med-name').value);
+      const formType = document.getElementById('med-form-type').value;
+      
+      let category = document.getElementById('med-category-select').value;
+      if (category === 'Other') {
+        category = document.getElementById('med-category-custom').value.trim() || 'General';
+      }
+
+      const pataPrice = parseFloat(document.getElementById('med-pata-price').value) || 0;
+      const tabletsPerPata = parseInt(document.getElementById('med-tablets-per-pata').value) || 1;
+      const boxPriceRaw = document.getElementById('med-box-price').value;
+      const boxPrice = boxPriceRaw === '' ? null : (parseFloat(boxPriceRaw) || 0);
+      const stripsPerBoxRaw = document.getElementById('med-strips-per-box').value;
+      const stripsPerBox = stripsPerBoxRaw === '' ? null : (parseInt(stripsPerBoxRaw) || 1);
+      const totalTabsBoxRaw = document.getElementById('med-total-tabs-box').value;
+      const totalTabsBox = totalTabsBoxRaw === '' ? null : (parseInt(totalTabsBoxRaw) || 0);
+      const tabletPrice = parseFloat(document.getElementById('med-tablet-price').value) || 0;
+      const notes = document.getElementById('med-notes').value.trim();
+      const place = document.getElementById('med-place').value;
+
+      if (id) {
+        const medIndex = medicines.findIndex(m => m.id === id);
+        if (medIndex !== -1) {
+          medicines[medIndex] = {
+            ...medicines[medIndex],
+            name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
+            image: currentImageData || medicines[medIndex].image
+          };
+        }
+      } else {
+        const newMed = {
+          id: 'med_' + Date.now(),
+          name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
+          image: currentImageData,
+          createdAt: new Date().toISOString()
+        };
+        medicines.unshift(newMed);
+      }
+
+      saveToLocalStorage();
+      renderCategoryPills();
+      resetForm();
+      let savedTab = 'home';
+      try { savedTab = localStorage.getItem('mediprice_active_tab') || 'home'; } catch (e) {}
+      if (!['home','add','calc','stats','profile'].includes(savedTab)) savedTab = 'home';
+      switchTab(savedTab);
+      showToast(id ? 'Medicine updated!' : 'Medicine saved!');
+    }
+
+    function editMedicine(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) return;
+
+      document.getElementById('med-id').value = med.id;
+      document.getElementById('med-name').value = cleanMedicineName(med.name);
+      document.getElementById('med-form-type').value = med.formType || 'Tablet';
+      document.getElementById('med-pata-price').value = med.pataPrice ?? '';
+      document.getElementById('med-tablets-per-pata').value = med.tabletsPerPata || 10;
+      document.getElementById('med-box-price').value = med.boxPrice ?? '';
+      document.getElementById('med-strips-per-box').value = med.stripsPerBox ?? '';
+      document.getElementById('med-total-tabs-box').value = med.totalTabsBox ?? '';
+      document.getElementById('med-tablet-price').value = med.tabletPrice ?? '';
+      document.getElementById('med-notes').value = med.notes || '';
+      populateEditMedicinePlaces(med.place || '');
+
+      if (['Tablets', 'Syrups', 'IV', 'Suspension', 'Capsule', 'Cream', 'Gel', 'Ointment', 'Liquid', 'Sachet', 'Powder', 'Inhaler', 'Painkiller', 'Antibiotic', 'Cough & Cold', 'Vitamins', 'Cardiovascular', 'Diabetes', 'Daily Dose', 'First Aid', 'Gastro'].includes(med.category)) {
+        document.getElementById('med-category-select').value = med.category;
+        document.getElementById('custom-cat-container').classList.add('hidden');
+      } else {
+        document.getElementById('med-category-select').value = 'Other';
+        document.getElementById('custom-cat-container').classList.remove('hidden');
+        document.getElementById('med-category-custom').value = med.category;
+      }
+
+      if (med.image) {
+        currentImageData = med.image;
+        document.getElementById('image-preview').src = med.image;
+        document.getElementById('image-preview').classList.remove('hidden');
+        document.getElementById('remove-img-btn').classList.remove('hidden');
+        document.getElementById('image-placeholder-icon').classList.add('hidden');
+      }
+
+      document.getElementById('form-title').textContent = 'Edit Medicine';
+      updateFormTypeLabels();
+      autoCalcBoxPricing();
+      switchTab('add');
+    }
+
+    function deleteMedicine(id) {
+      if (confirm('Are you sure you want to delete this medicine?')) {
+        medicines = medicines.filter(m => !selectedMedIds.has(m.id) && m.id !== id);
+        saveToLocalStorage();
+        renderCategoryPills();
+        renderMedicineList();
+        showToast('Medicine deleted.');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('medicine-form').reset();
+      document.getElementById('med-id').value = '';
+      document.getElementById('form-title').textContent = 'Add New Medicine';
+      populateEditMedicinePlaces('');
+      removeImage();
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          currentImageData = event.target.result;
+          document.getElementById('image-preview').src = currentImageData;
+          document.getElementById('image-preview').classList.remove('hidden');
+          document.getElementById('remove-img-btn').classList.remove('hidden');
+          document.getElementById('image-placeholder-icon').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeImage() {
+      currentImageData = '';
+      document.getElementById('image-preview').src = '';
+      document.getElementById('image-preview').classList.add('hidden');
+      document.getElementById('remove-img-btn').classList.add('hidden');
+      document.getElementById('image-placeholder-icon').classList.remove('hidden');
+      document.getElementById('img-input').value = '';
+    }
+
+    function toggleCustomCategory(val) {
+      if (val === 'Other') {
+        document.getElementById('custom-cat-container').classList.remove('hidden');
+      } else {
+        document.getElementById('custom-cat-container').classList.add('hidden');
+      }
+    }
+
+    function updateFormTypeLabels() {
+      const type = document.getElementById('med-form-type').value;
+      const packLabel = document.getElementById('label-pack-price');
+      const unitLabel = document.getElementById('label-unit-count');
+      const unitTitle = document.getElementById('label-per-unit-title');
+
+      if (type === 'Syrup') {
+        packLabel.textContent = 'Price / Bottle (Rs.) *';
+        unitLabel.textContent = 'Bottles in Pack (Optional)';
+        unitTitle.textContent = 'Price Per Bottle (Rs.):';
+      } else if (type === 'Injection') {
+        packLabel.textContent = 'Price / Box (Rs.) *';
+        unitLabel.textContent = 'Vials in Box (Optional)';
+        unitTitle.textContent = 'Price Per Vial (Rs.):';
+      } else {
+        packLabel.textContent = 'Price / Pata (Rs.) *';
+        unitLabel.textContent = 'Tablets in 1 Pata';
+        unitTitle.textContent = 'Price Per Tablet (Rs.):';
+      }
+    }
+
+    // Search and Filters
+    function handleSearchFilter() {
+      const val = document.getElementById('search-input').value;
+      const clearBtn = document.getElementById('clear-search');
+      if (val) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+      renderMedicineList();
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search').classList.add('hidden');
+      renderMedicineList();
+    }
+
+    function toggleBulkSelectMode() {
+      isBulkSelectMode = !isBulkSelectMode;
+      const bar = document.getElementById('bulk-action-bar');
+      const btnText = document.getElementById('bulk-btn-text');
+
+      if (isBulkSelectMode) {
+        bar.classList.remove('hidden');
+        btnText.textContent = 'Done';
+      } else {
+        bar.classList.add('hidden');
+        btnText.textContent = 'Select';
+        selectedMedIds.clear();
+      }
+      renderMedicineList();
+    }
+
+    function exitBulkSelectMode() {
+      isBulkSelectMode = false;
+      document.getElementById('bulk-action-bar').classList.add('hidden');
+      document.getElementById('bulk-btn-text').textContent = 'Select';
+      selectedMedIds.clear();
+      renderMedicineList();
+    }
+
+    function toggleSelectMed(id, checked) {
+      if (checked) selectedMedIds.add(id);
+      else selectedMedIds.delete(id);
+      document.getElementById('selected-count-text').textContent = `${selectedMedIds.size} selected`;
+    }
+
+    function toggleSelectAll(checked) {
+      if (checked) {
+        medicines.forEach(m => selectedMedIds.add(m.id));
+      } else {
+        selectedMedIds.clear();
+      }
+      document.getElementById('selected-count-text').textContent = `${selectedMedIds.size} selected`;
+      renderMedicineList();
+    }
+
+    function deleteSelectedMedicines() {
+      if (selectedMedIds.size === 0) return;
+      if (confirm(`Delete ${selectedMedIds.size} selected medicines?`)) {
+        medicines = medicines.filter(m => !selectedMedIds.has(m.id));
+        exitBulkSelectMode();
+        saveToLocalStorage();
+        renderCategoryPills();
+        renderMedicineList();
+        showToast('Selected items deleted.');
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2500);
+    }
+
+    function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
+    function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
+    function exportDataJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ medicines, salesHistory, userProfile }));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mediprice_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Export downloaded!');
+    }
+
+    function importDataJSON(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.medicines) medicines = data.medicines;
+            if (data.salesHistory) salesHistory = data.salesHistory;
+            if (data.userProfile) userProfile = data.userProfile;
+            removeDuplicateMedicines(true);
+            saveToLocalStorage();
+            renderCategoryPills();
+            renderMedicineList();
+            closeBackupModal();
+            showToast('Backup restored successfully!');
+          } catch (err) {
+            showToast('Invalid backup file!');
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    // Enhanced Deduplication logic by Brand Key
+    function removeDuplicateMedicines(silent = false) {
+      const brandMap = new Map();
+      let removedCount = 0;
+
+      medicines.forEach(med => {
+        const bKey = getBrandKey(med.name);
+        if (!bKey) return;
+
+        if (!brandMap.has(bKey)) {
+          brandMap.set(bKey, med);
+        } else {
+          removedCount++;
+        }
+      });
+
+      medicines = Array.from(brandMap.values());
+      saveToLocalStorage();
+      renderCategoryPills();
+      renderMedicineList();
+
+      if (!silent) {
+        showToast(`Removed ${removedCount} duplicates by brand name!`);
+      }
+    }
+
+    function clearAllDataWithConfirm() {
+      if (confirm('Clear all data and reset database to standard list?')) {
+        localStorage.clear();
+        medicines = generatePakistaniMedsWithSeeds();
+        salesHistory = [];
+        saveToLocalStorage();
+        renderCategoryPills();
+        renderMedicineList();
+        showToast('Database reset!');
+      }
+    }
+
+    function calculateStorageUsage() {
+      let totalBytes = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          totalBytes += (localStorage[key].length + key.length) * 2;
+        }
+      }
+      const kb = (totalBytes / 1024).toFixed(1);
+      const storageElem = document.getElementById('storage-used-text');
+      if (storageElem) storageElem.textContent = `${kb} KB`;
+    }
+
+    function loadUserProfile() {
+      const storedProfile = localStorage.getItem('mediprice_user_profile');
+      if (storedProfile) {
+        try {
+          userProfile = JSON.parse(storedProfile);
+        } catch(e) {}
+      }
+      updateProfilePreview();
+    }
+
+    function saveUserProfile() {
+      userProfile.name = document.getElementById('input-user-name').value;
+      userProfile.store = document.getElementById('input-store-name').value;
+      userProfile.location = document.getElementById('input-user-location').value;
+      userProfile.phone = document.getElementById('input-user-phone').value;
+      
+      localStorage.setItem('mediprice_user_profile', JSON.stringify(userProfile));
+      updateProfilePreview();
+      showToast('Profile updated!');
+    }
+
+    function updateProfilePreview() {
+      const name = document.getElementById('input-user-name') ? document.getElementById('input-user-name').value : userProfile.name;
+      const store = document.getElementById('input-store-name') ? document.getElementById('input-store-name').value : userProfile.store;
+      const location = document.getElementById('input-user-location') ? document.getElementById('input-user-location').value : userProfile.location;
+
+      document.getElementById('display-user-name').textContent = name;
+      document.getElementById('display-store-name').textContent = store;
+      document.getElementById('display-user-location').querySelector('span').textContent = location;
+
+      if (userProfile.avatar) {
+        document.getElementById('profile-avatar-preview').src = userProfile.avatar;
+        document.getElementById('header-avatar-img').src = userProfile.avatar;
+        document.getElementById('header-avatar-img').classList.remove('hidden');
+        document.getElementById('header-avatar-icon').classList.add('hidden');
+      }
+    }
+
+    function handleAvatarUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          userProfile.avatar = event.target.result;
+          saveUserProfile();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updateStatsScreen() {
+      const totalMeds = medicines.length;
+      const categories = new Set(medicines.map(m => m.category || 'Other')).size;
+
+      const totalRevenue = salesHistory.reduce((acc, s) => acc + (s.revenue || 0), 0);
+      const totalSalesCount = salesHistory.length;
+
+      const todayStr = new Date().toDateString();
+      const todaySales = salesHistory.filter(s => new Date(s.date).toDateString() === todayStr);
+      const todayRevenue = todaySales.reduce((acc, s) => acc + (s.revenue || 0), 0);
+
+      document.getElementById('stat-total-revenue').textContent = `Rs. ${totalRevenue.toFixed(2)}`;
+      document.getElementById('stat-today-revenue').textContent = `Today: Rs. ${todayRevenue.toFixed(2)}`;
+      document.getElementById('stat-total-sales-count').textContent = totalSalesCount;
+      document.getElementById('stat-today-sales-count').textContent = `Today: ${todaySales.length} orders`;
+
+      document.getElementById('stat-total-meds').textContent = totalMeds.toLocaleString();
+      document.getElementById('stat-total-categories').textContent = `${categories} Categories`;
+
+      renderSalesHistory();
+
+      // Form Distribution Breakdown
+      const formCounts = {};
+      medicines.forEach(m => {
+        const form = m.formType || 'Tablet';
+        formCounts[form] = (formCounts[form] || 0) + 1;
+      });
+
+      const breakdownContainer = document.getElementById('form-type-breakdown-list');
+      if (breakdownContainer) {
+        breakdownContainer.innerHTML = Object.keys(formCounts).map(form => {
+          const count = formCounts[form];
+          const percentage = ((count / (totalMeds || 1)) * 100).toFixed(1);
+          return `
+            <div>
+              <div class="flex justify-between font-semibold text-slate-700 mb-1">
+                <span>${form}</span>
+                <span>${count} (${percentage}%)</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  </script>
+</body>
+</html>
