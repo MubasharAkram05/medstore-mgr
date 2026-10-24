@@ -269,15 +269,15 @@ function updateFormTypeLabels() {
 
   if (type === 'Syrup') {
     packLabel.textContent = 'Price / Bottle (Rs.) *';
-    unitLabel.textContent = 'Bottles in Pack (Optional)';
+    if (unitLabel) unitLabel.textContent = 'Bottles in Pack (Optional)';
     unitTitle.textContent = 'Price Per Bottle (Rs.):';
   } else if (type === 'Injection') {
     packLabel.textContent = 'Price / Box (Rs.) *';
-    unitLabel.textContent = 'Vials in Box (Optional)';
+    if (unitLabel) unitLabel.textContent = 'Vials in Box (Optional)';
     unitTitle.textContent = 'Price Per Vial (Rs.):';
   } else {
     packLabel.textContent = 'Price / Pata (Rs.) *';
-    unitLabel.textContent = 'Tablets in 1 Pata';
+    if (unitLabel) unitLabel.textContent = 'Tablets in 1 Pata';
     unitTitle.textContent = 'Price Per Tablet (Rs.):';
   }
 }

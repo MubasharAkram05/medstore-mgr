@@ -92,9 +92,8 @@ function loadLocalStorage() {
     }
   });
 
-  // Perform deduplication upon initial load
-  removeDuplicateMedicines(true);
-
+  // Load sales BEFORE deduplication: removeDuplicateMedicines() saves to
+  // localStorage, and saving an empty salesHistory used to wipe the sales.
   const storedSales = localStorage.getItem(STORAGE_KEYS.sales);
   if (storedSales) {
     try {
@@ -105,6 +104,9 @@ function loadLocalStorage() {
   } else {
     salesHistory = [];
   }
+
+  // Perform deduplication upon initial load
+  removeDuplicateMedicines(true);
 
   saveToLocalStorage();
 }
