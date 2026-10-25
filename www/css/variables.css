@@ -1,0 +1,12 @@
+/* variables.css: brand colors and theme tokens */
+
+:root {
+  --mp-green: #059669;
+  --mp-green-dark: #047857;
+  --mp-teal: #0f766e;
+  --mp-ink: #172033;
+  --mp-muted: #64748b;
+  --mp-border: #e2e8f0;
+  --mp-surface: #ffffff;
+  --mp-bg: #f5f8f7;
+}

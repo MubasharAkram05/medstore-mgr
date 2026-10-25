@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MedStoreMgr</string>
+    <string name="title_activity_main">MedStoreMgr</string>
+    <string name="package_name">com.mubashar.medstoremgr</string>
+    <string name="custom_url_scheme">com.mubashar.medstoremgr</string>
+</resources>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#047857">
+  <title>MedStoreMgr - Medical Store Manager</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+  <!-- Styles (all local, no CDN). tailwind.css is generated: npm run build:css -->
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="h-full flex justify-center items-center bg-slate-900 md:p-4 text-slate-800">
+
+  <!-- Mobile Screen Container -->
+  <div id="app-container" class="w-full max-w-md h-full md:h-[844px] bg-slate-50 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border-0 md:border border-slate-700">
+
+    <!-- Top Header -->
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white px-5 pt-5 pb-4 shadow-md flex justify-between items-center z-10">
+      <div>
+        <div class="flex items-center space-x-2">
+          <i data-lucide="pill" class="w-6 h-6 text-emerald-300"></i>
+          <h1 class="font-bold text-xl tracking-tight">MedStoreMgr</h1>
+        </div>
+        <p class="text-xs text-emerald-100 mt-0.5">Stock & Sales Manager (Rs.)</p>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <button id="header-profile-btn" data-action="switchTab" data-tab="profile" class="bg-emerald-700/60 hover:bg-emerald-700 p-1.5 rounded-full text-emerald-100 hover:text-white transition-colors flex items-center justify-center border border-emerald-500/30" title="Profile & Settings">
+          <img id="header-avatar-img" src="" class="w-7 h-7 rounded-full object-cover hidden">
+          <i id="header-avatar-icon" data-lucide="user" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar p-4 pb-24">
+
+      <!-- SCREEN 1: MEDICINE LIST (HOME) -->
+      <section id="screen-home" class="space-y-3">
+
+        <!-- Premium Pharmacy Dashboard -->
+        <div id="home-dashboard" class="mp-dashboard">
+          <div class="mp-dashboard-hero">
+            <div class="mp-hero-glow mp-hero-glow-1"></div>
+            <div class="mp-hero-glow mp-hero-glow-2"></div>
+            <div class="mp-hero-copy">
+              <span class="mp-eyebrow"><i data-lucide="activity" class="w-3.5 h-3.5"></i> PHARMACY OVERVIEW</span>
+              <h2>Good day, <span id="home-greeting">Pharmacy</span></h2>
+              <p>Manage medicines, prices and sales in one place.</p>
+            </div>
+            <div class="mp-hero-icon"><i data-lucide="pill" class="w-6 h-6"></i></div>
+          </div>
+          <div class="mp-dashboard-strip">
+            <div class="mp-strip-icon"><i data-lucide="store" class="w-5 h-5"></i></div>
+            <div class="mp-strip-copy"><span>Total Medicines</span><strong id="dash-medicine-count">0</strong><small>in your pharmacy database</small></div>
+            <div class="mp-strip-art" aria-hidden="true">
+              <i data-lucide="pill" class="w-10 h-10"></i>
+              <i data-lucide="plus" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="space-y-2">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-slate-400"></i>
+            <input type="text" id="search-input" placeholder="Search medicines, generics..." class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+            <button id="clear-search" data-action="clearSearch" class="hidden absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="mp-section-head">
+            <div><i data-lucide="layout-grid" class="w-4 h-4"></i><span>Categories</span></div>
+            <span class="mp-section-hint">Swipe →</span>
+          </div>
+          <div class="flex items-center justify-between gap-2 pt-0.5">
+            <div class="flex gap-2 w-full py-1 overflow-x-auto no-scrollbar" id="category-pills">
+              <!-- Dynamically populated tags -->
+            </div>
+          </div>
+
+          <!-- Sort & Bulk Action Toolbar -->
+          <div class="flex justify-between items-center text-xs text-slate-500 pt-0.5 px-1">
+            <div class="flex items-center space-x-2">
+              <span id="med-count-badge" class="font-medium text-slate-600">0 items found</span>
+              <button data-action="toggleBulkSelectMode" id="bulk-toggle-btn" class="text-emerald-700 hover:text-emerald-800 font-bold bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md transition flex items-center space-x-1">
+                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                <span id="bulk-btn-text">Select</span>
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <span>Sort:</span>
+              <select id="sort-select" class="bg-transparent font-semibold text-emerald-700 focus:outline-none cursor-pointer">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="recent">Recently Added</option>
+                <option value="unit-low">Tablet Price (Low to High)</option>
+                <option value="pack-low">Pack Price (Low to High)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bulk Selection Action Bar -->
+          <div id="bulk-action-bar" class="hidden bg-slate-800 text-white rounded-xl p-2.5 flex items-center justify-between shadow-lg">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="select-all-check" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+              <span id="selected-count-text" class="text-xs font-semibold text-slate-200">0 selected</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button data-action="deleteSelectedMedicines" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Delete Selected</span>
+              </button>
+              <button data-action="exitBulkSelectMode" class="bg-slate-700 hover:bg-slate-600 p-1 rounded-lg text-slate-300 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Medicine Cards Container -->
+        <div id="medicine-list" class="grid grid-cols-2 gap-2 pt-1">
+          <!-- Dynamic Cards Content -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-12 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 text-emerald-600">
+            <i data-lucide="package-open" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-slate-700 font-bold text-base">No Medicines Found</h3>
+          <p class="text-slate-500 text-xs mt-1 max-w-xs mx-auto">Load medical items in PKR.</p>
+          <div class="flex justify-center space-x-2 mt-4">
+            <button data-action="switchTab" data-tab="add" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md inline-flex items-center space-x-1">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Add Product</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SCREEN 2: ADD / EDIT MEDICINE FORM -->
+      <section id="screen-add" class="hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div><div class="flex items-center"><h2 id="form-title" class="text-lg font-bold text-slate-800">Add New Medicine</h2></div><p class="text-[10px] text-slate-500 mt-1 ml-[37px]">Add medicine details, pack pricing and photo</p></div>
+          <button data-action="cancelForm" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="medicine-form" class="space-y-4">
+          <input type="hidden" id="med-id">
+
+          <!-- Image Picker / Camera Preview -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Product Picture</label>
+            <div class="flex items-center space-x-3">
+              <div id="image-preview-container" class="w-20 h-20 rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 flex items-center justify-center overflow-hidden relative group">
+                <img id="image-preview" src="" class="hidden w-full h-full object-cover">
+                <i id="image-placeholder-icon" data-lucide="camera" class="w-8 h-8 text-slate-400"></i>
+                <button type="button" id="remove-img-btn" data-action="removeImage" class="hidden absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600">
+                  <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+              </div>
+
+              <div class="flex-1 space-y-2">
+                <label for="img-input" class="inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer shadow-sm">
+                  <i data-lucide="upload" class="w-4 h-4 mr-1.5 text-slate-500"></i>
+                  <span>Upload / Take Photo</span>
+                </label>
+                <input type="file" id="img-input" accept="image/*" capture="environment" class="hidden">
+                <p class="text-[10px] text-slate-400">Attach medicine box or pack photo.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Medicine Name *</label>
+            <input type="text" id="med-name" required placeholder="e.g. Panadol Extra, Hydryllin, Rigix" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <!-- Dosage Form & Category Select -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form Type *</label>
+              <select id="med-form-type" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
+                <option value="Tablet">Tablet / Capsule</option>
+                <option value="Syrup">Syrup / Suspension</option>
+                <option value="Injection">Injection / Vial</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Cream">Cream</option>
+                <option value="Gel">Gel</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Liquid">Liquid</option>
+                <option value="Sachet">Sachet</option>
+                <option value="Powder">Powder</option>
+                <option value="Inhaler">Inhaler</option>
+                <option value="Drops">Eye/Ear Drops</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category / Tag</label>
+              <select id="med-category-select" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="Tablets">Tablets</option>
+                <option value="Syrups">Syrups</option>
+                <option value="IV">IV</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Cream">Cream</option>
+                <option value="Gel">Gel</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Liquid">Liquid</option>
+                <option value="Sachet">Sachet</option>
+                <option value="Powder">Powder</option>
+                <option value="Inhaler">Inhaler</option>
+                <option value="Painkiller">Painkiller</option>
+                <option value="Antibiotic">Antibiotic</option>
+                <option value="Cough & Cold">Cough & Cold</option>
+                <option value="Vitamins">Vitamins</option>
+                <option value="Cardiovascular">Cardiovascular</option>
+                <option value="Diabetes">Diabetes</option>
+                <option value="Daily Dose">Daily Dose</option>
+                <option value="First Aid">First Aid</option>
+                <option value="Gastro">Gastro</option>
+                <option value="Other">Other (Custom)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="custom-cat-container" class="hidden">
+            <input type="text" id="med-category-custom" placeholder="Custom Category Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <!-- Price in PKR -->
+          <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-emerald-600 text-white flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-100">Medicine Pricing</p>
+                <h3 id="price-section-title" class="text-sm font-extrabold">PRICE IN PKR (Rs.)</h3>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+                <i data-lucide="coins" class="w-5 h-5"></i>
+              </div>
+            </div>
+
+            <div class="p-3 space-y-3">
+              <!-- Box Pricing -->
+              <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <i data-lucide="package" class="w-4 h-4 text-emerald-600"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs font-extrabold text-slate-800">Box Pricing</p>
+                    <p class="text-[9px] text-slate-400">Enter box details to auto-calculate rates</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Full Box Price (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-slate-400">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-box-price" placeholder="e.g. 500" class="w-full h-10 pl-9 pr-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Tablets in Box</label>
+                    <input type="number" min="1" step="1" id="med-total-tabs-box" placeholder="e.g. 200" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Pata's</label>
+                    <input type="number" min="1" step="1" id="med-strips-per-box" placeholder="e.g. 10" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Tablets in 1 Pata</label>
+                    <input type="number" min="1" step="1" id="med-tablets-per-pata" value="10" placeholder="10" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pata Pricing -->
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label id="label-pack-price" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Pata (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-emerald-600">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-pata-price" required placeholder="0.00" class="w-full h-10 pl-9 pr-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-extrabold text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label id="label-per-unit-title" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Tablet (Rs.)</label>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-emerald-600">Rs.</span>
+                      <input type="number" step="0.01" min="0" id="med-tablet-price" required placeholder="0.00" class="w-full h-10 pl-9 pr-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-extrabold text-emerald-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[9px] text-emerald-700/70 mt-2">Box price ÷ total tablets = tablet rate. Box price ÷ total pata's = pata rate.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medicine Storage Place -->
+          <div class="bg-amber-50/70 rounded-2xl p-3 border border-amber-200">
+            <div class="flex items-center gap-2 mb-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-amber-600"></i>
+              <div>
+                <label for="med-place" class="block text-xs font-extrabold text-amber-800 uppercase tracking-wider">Place</label>
+                <p class="text-[9px] text-amber-700/70">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+              </div>
+            </div>
+            <select id="med-place" class="w-full h-10 px-3 bg-white border border-amber-200 rounded-xl text-sm font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300">
+              <option value="">Select Place</option>
+            </select>
+          </div>
+
+          <!-- Notes & Dosage Info -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Notes / Dosage / Mg</label>
+            <textarea id="med-notes" rows="2" placeholder="e.g. 500mg, 1 tsp twice daily after meals" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          </div>
+
+          <!-- Form Submit Buttons -->
+          <div class="pt-2 flex space-x-2">
+            <button type="button" data-action="cancelForm" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-sm hover:bg-slate-100 transition">
+              Cancel
+            </button>
+            <button type="submit" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm shadow-md transition flex items-center justify-center space-x-1">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Save Medicine</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- SCREEN 3: CALCULATOR & ESTIMATOR -->
+      <section id="screen-calc" class="hidden space-y-4">
+        <div class="border-b border-slate-200 pb-3">
+          <h2 class="text-lg font-bold text-slate-800">PKR Prescription Estimator</h2>
+          <p class="text-xs text-slate-500">Calculate total prescription cost in Rs. for tablets, syrups, or injections.</p>
+        </div>
+
+        <!-- Searchable Medicine Select Dropdown -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Select Medicine</label>
+            <button type="button" data-action="resetCalculator" class="text-[10px] font-bold text-slate-400 hover:text-emerald-600">Reset</button>
+          </div>
+
+          <!-- Combined Search + Select Medicine -->
+          <div class="relative">
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+              <input type="text" id="calc-search-input" placeholder="Search & select medicine..." autocomplete="off" class="w-full pl-9 pr-9 py-3 bg-white border-2 border-emerald-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+              <button id="clear-calc-search" type="button" data-action="clearCalcSearch" aria-label="Clear search" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div id="calc-medicine-results" class="hidden absolute z-30 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg"></div>
+            <select id="calc-med-select" class="hidden">
+              <!-- Internal selected medicine value -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Pata Pricing Calculator -->
+        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-extrabold text-emerald-800">PRICING IN PKR (Rs.)</h3>
+            <div class="w-9 h-9 rounded-full bg-white border border-emerald-200 flex items-center justify-center">
+              <i data-lucide="calculator" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+          </div>
+
+          <!-- Calculation input order:
+               1. Full Box Price
+               2. Total Tablets in Box
+               3. Total Pata(s) / Strips in Box
+               4. Price / Pata (calculated)
+               5. Tablets in 1 Pata
+          -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Full Box Price (Rs.)</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
+                <input type="number" min="0" step="0.01" id="calc-box-price" placeholder="500" class="w-full pl-11 pr-2 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Tablets in Box</label>
+              <input type="number" min="1" step="1" id="calc-total-tabs-box" placeholder="200" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Pata's</label>
+              <input type="number" min="1" step="1" id="calc-strips-box" placeholder="10" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Price / Pata (Rs.) *</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
+                <input type="number" min="0" step="0.01" id="calc-price-pata" value="" placeholder="50" class="w-full pl-11 pr-2 py-3 bg-white border-2 border-emerald-400 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tablets in 1 Pata</label>
+              <input type="number" min="1" step="1" id="calc-units-pata" value="" placeholder="10" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-emerald-100 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-slate-700">Price Per Tablet (Rs.):</div>
+              <p class="text-[10px] text-slate-400 mt-0.5">Calculated tablet rate</p>
+            </div>
+            <div class="min-w-[125px] bg-white border-2 border-emerald-300 rounded-xl px-4 py-3 text-right">
+              <span class="text-xs font-bold text-slate-500 mr-1">Rs.</span>
+              <span id="calc-unit-price" class="text-xl font-extrabold text-emerald-700">0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Medicine Summary Card -->
+        <div id="calc-summary-card" class="bg-slate-100 border border-slate-200 rounded-2xl p-3 hidden">
+          <div class="flex items-center gap-3">
+            <img id="calc-img" src="" alt="Medicine" class="w-12 h-12 rounded-lg object-cover bg-slate-200 shrink-0">
+            <div class="min-w-0">
+              <h4 id="calc-name" class="font-bold text-slate-800 text-sm truncate">--</h4>
+              <p id="calc-prices-text" class="text-xs text-slate-500">Pata: Rs. 0 | Tablet: Rs. 0</p>
+              <p id="calc-pack-info" class="text-[10px] text-slate-400 mt-0.5">—</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Full Box Price</div>
+              <div id="calc-box-price-display" class="text-sm font-extrabold text-slate-800 mt-0.5">Rs. —</div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total Tablets</div>
+              <div id="calc-total-tabs-display" class="text-sm font-extrabold text-slate-800 mt-0.5">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inputs for Quantities -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-extrabold text-slate-800">Quantity Calculator</div>
+              <div class="text-[10px] text-slate-400">Enter pata/strip and loose tablet quantity</div>
+            </div>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold">PKR</div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label id="calc-pata-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Bottles</label>
+              <input type="number" min="0" value="0" id="calc-pata-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <div>
+              <label id="calc-tablet-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
+              <input type="number" min="0" value="0" id="calc-tablet-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
+            <div>
+              <span class="text-xs text-emerald-800 font-medium">Total Cost (PKR)</span>
+              <p class="text-[10px] text-emerald-600">Calculated in Pakistani Rupees</p>
+            </div>
+            <div id="calc-total-result" class="text-2xl font-extrabold text-emerald-700">
+              Rs. 0.00
+            </div>
+          </div>
+          <div id="calc-breakdown" class="text-[10px] text-slate-400 text-center">0 pata + 0 tablets</div>
+
+          <button data-action="recordSaleFromCalc" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1.5">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Record as Completed Sale</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: SUMMARY & SALES STATS -->
+      <section id="screen-stats" class="hidden space-y-4">
+        <div class="border-b border-slate-200 pb-3 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Sales & Database Stats</h2>
+            <p class="text-xs text-slate-500">Live revenue analytics & sales performance</p>
+          </div>
+          <button data-action="clearSalesHistoryConfirm" class="text-[11px] font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition">
+            Reset Sales
+          </button>
+        </div>
+
+        <!-- Sales Analytics Summary Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center opacity-90">
+              <span class="text-[10px] font-bold uppercase tracking-wider">Total Sales Revenue</span>
+              <i data-lucide="trending-up" class="w-4 h-4"></i>
+            </div>
+            <div id="stat-total-revenue" class="text-2xl font-black mt-2">Rs. 0.00</div>
+            <p class="text-[10px] text-emerald-100 mt-1" id="stat-today-revenue">Today: Rs. 0.00</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-3.5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center opacity-90">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Total Items Sold</span>
+              <i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <div id="stat-total-sales-count" class="text-2xl font-black mt-2">0</div>
+            <p class="text-[10px] text-slate-300 mt-1" id="stat-today-sales-count">Today: 0 orders</p>
+          </div>
+        </div>
+
+        <!-- Product Stats -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+          <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
+          <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+        </div>
+
+        <!-- Sales History List -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Recent Sales History</h3>
+            <select id="sales-filter-select" class="text-xs font-semibold text-emerald-700 bg-transparent focus:outline-none">
+              <option value="all">All Time</option>
+              <option value="today">Today Only</option>
+            </select>
+          </div>
+
+          <div id="sales-history-container" class="space-y-2 max-h-56 overflow-y-auto no-scrollbar pr-1">
+            <!-- Dynamic sales history entries -->
+          </div>
+        </div>
+
+        <!-- Form Breakdown list -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Dosage Form Distribution</h3>
+          <div id="form-type-breakdown-list" class="space-y-2 text-xs">
+            <!-- Dynamic elements -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: USER PROFILE & APP SETTINGS -->
+      <section id="screen-profile" class="hidden space-y-4">
+
+        <!-- Profile Header Card -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm text-center relative overflow-hidden">
+          <div class="h-16 bg-gradient-to-r from-emerald-600 to-teal-700 -mx-4 -mt-4 mb-8"></div>
+          <div class="relative -mt-16 inline-block">
+            <img id="profile-avatar-preview" src="assets/img/avatar-placeholder.svg" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md mx-auto bg-slate-100">
+            <label for="avatar-input" class="absolute bottom-0 right-0 bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-full shadow cursor-pointer transition">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+            </label>
+            <input type="file" id="avatar-input" accept="image/*" class="hidden">
+          </div>
+
+          <h3 id="display-user-name" class="font-bold text-slate-800 text-lg mt-1">Pharmacy Admin</h3>
+          <p id="display-store-name" class="text-xs text-emerald-700 font-semibold">MedStoreMgr</p>
+          <span id="display-user-location" class="inline-flex items-center text-[11px] text-slate-400 mt-1">
+            <i data-lucide="map-pin" class="w-3 h-3 mr-1 text-slate-400"></i>
+            <span>Lahore, Pakistan</span>
+          </span>
+        </div>
+
+        <!-- Editable Profile Information -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">User Details</h4>
+            <button data-action="saveUserProfile" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Save Info</span>
+            </button>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 uppercase">Your Name</label>
+              <input type="text" id="input-user-name" value="Pharmacy Admin" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-500 uppercase">Store / Pharmacy Name</label>
+              <input type="text" id="input-store-name" value="MedStoreMgr" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Location</label>
+                <input type="text" id="input-user-location" value="Lahore, Pakistan" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-500 uppercase">Contact Number</label>
+                <input type="text" id="input-user-phone" value="+92 300 1234567" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage & Data Maintenance -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">Storage & Maintenance</h4>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-600 font-medium">LocalStorage Used:</span>
+              <span id="storage-used-text" class="font-bold text-emerald-700">0 KB</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button data-action="openBackupModal" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1">
+                <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Backup / Restore</span>
+              </button>
+
+              <button data-action="removeDuplicateMedicines" class="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1">
+                <i data-lucide="copy-x" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>Remove Duplicates</span>
+              </button>
+            </div>
+
+            <button data-action="clearAllDataWithConfirm" class="w-full py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-1 mt-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i>
+              <span>Clear All Data</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 flex justify-around items-center z-20">
+      <button data-action="switchTab" data-tab="home" id="nav-home" class="flex flex-col items-center text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span>List</span>
+      </button>
+
+      <button data-action="switchTab" data-tab="calc" id="nav-calc" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="calculator" class="w-5 h-5"></i>
+        <span>Calc</span>
+      </button>
+
+      <button data-action="switchTab" data-tab="add" id="nav-add" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <div class="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg -mt-5 border-2 border-white">
+          <i data-lucide="plus" class="w-6 h-6"></i>
+        </div>
+        <span class="text-[10px] mt-0.5">Add</span>
+      </button>
+
+      <button data-action="switchTab" data-tab="stats" id="nav-stats" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+        <span>Stats</span>
+      </button>
+
+      <button data-action="switchTab" data-tab="profile" id="nav-profile" class="flex flex-col items-center text-slate-400 hover:text-emerald-600 font-medium text-[11px] space-y-0.5">
+        <i data-lucide="user" class="w-5 h-5"></i>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <!-- MODAL: QUICK SELL / RECORD SALE MODAL -->
+    <div id="sell-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-md rounded-t-3xl md:rounded-3xl p-5 space-y-4 shadow-xl">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+              <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Record Sale</h3>
+          </div>
+          <button data-action="closeSellModal" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <input type="hidden" id="sell-med-id">
+
+        <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center space-x-3">
+          <img id="sell-med-img" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-200">
+          <div>
+            <h4 id="sell-med-name" class="font-bold text-slate-800 text-sm">--</h4>
+            <p id="sell-med-stock-text" class="text-xs text-emerald-700 font-semibold"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label id="sell-pack-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Packs</label>
+            <input type="number" min="0" value="1" id="sell-pack-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label id="sell-unit-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
+            <input type="number" min="0" value="0" id="sell-unit-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
+          <span class="text-xs text-emerald-800 font-bold">Total Bill (PKR):</span>
+          <span id="sell-total-bill" class="text-2xl font-black text-emerald-700">Rs. 0.00</span>
+        </div>
+
+        <div class="flex space-x-2">
+          <button data-action="closeSellModal" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-xs hover:bg-slate-100">
+            Cancel
+          </button>
+          <button data-action="confirmRecordSale" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>Confirm & Complete Sale</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: MEDICINE DETAILS MODAL -->
+    <div id="details-modal" class="hidden fixed inset-0 bg-slate-950/65 backdrop-blur-md z-50 flex justify-center items-end md:items-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-md rounded-t-[30px] md:rounded-[30px] max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
+        <div class="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mt-2 md:hidden"></div>
+        <div class="p-4 sm:p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-1.5">
+            <span id="modal-form-tag" class="px-2.5 py-1 bg-teal-50 text-teal-700 text-[10px] font-extrabold rounded-full uppercase tracking-wider border border-teal-100">Form</span>
+            <span id="modal-category-tag" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider border border-emerald-100">Category</span>
+          </div>
+          <button data-action="closeDetailsModal" class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 p-4">
+          <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-100/50"></div>
+          <div class="relative text-center">
+            <div class="w-[104px] h-[104px] mx-auto rounded-[24px] p-1 bg-white shadow-lg border border-emerald-100">
+              <img id="modal-img" src="" class="w-full h-full object-cover rounded-[20px] bg-emerald-600">
+            </div>
+            <h3 id="modal-title" class="text-[24px] leading-tight font-extrabold text-slate-800 mt-3">Medicine Name</h3>
+            <p id="modal-notes" class="text-[12px] leading-5 text-slate-500 mt-1 px-3 italic">No dosage or medicine notes attached.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="package" class="w-3.5 h-3.5"></i><span id="modal-box-title" class="text-[9px] uppercase tracking-wider font-extrabold">Full Box Price</span></div>
+            <span id="modal-box-price" class="text-[18px] leading-none font-extrabold text-emerald-600">Rs. —</span>
+            <span id="modal-box-detail" class="text-[10px] text-slate-400 block mt-1">Complete box</span>
+          </div>
+          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="pill" class="w-3.5 h-3.5"></i><span id="modal-total-tabs-title" class="text-[9px] uppercase tracking-wider font-extrabold">Total Tablets</span></div>
+            <span id="modal-total-tabs" class="text-[18px] leading-none font-extrabold text-teal-600">—</span>
+            <span id="modal-total-tabs-detail" class="text-[10px] text-slate-400 block mt-1">Tablets in box</span>
+          </div>
+          <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100 shadow-sm">
+            <div class="flex items-center gap-1.5 text-emerald-700 mb-1"><i data-lucide="layers-3" class="w-3.5 h-3.5"></i><span id="modal-pack-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Pata</span></div>
+            <span id="modal-pata-price" class="text-[18px] leading-none font-extrabold text-emerald-700">Rs. 0.00</span>
+            <span id="modal-pata-count" class="text-[10px] text-emerald-700/70 block mt-1">10 tablets</span>
+          </div>
+          <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm">
+            <div class="flex items-center gap-1.5 text-teal-700 mb-1"><i data-lucide="coins" class="w-3.5 h-3.5"></i><span id="modal-unit-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Tablet</span></div>
+            <span id="modal-tablet-price" class="text-[18px] leading-none font-extrabold text-teal-700">Rs. 0.00</span>
+            <span id="modal-stock-text" class="text-[10px] text-teal-700 font-bold block mt-1"></span>
+          </div>
+        </div>
+
+        <!-- Medicine Storage Place (display only) -->
+        <div class="w-fit max-w-[220px] p-3 bg-amber-50/70 rounded-2xl border border-amber-200 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-amber-700">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold">Place</span>
+            </div>
+            <span id="modal-place-display" class="px-3 py-1.5 bg-white rounded-xl border border-amber-200 text-sm font-extrabold text-slate-800 shadow-sm">—</span>
+          </div>
+          <p class="text-[9px] text-amber-700/70 mt-1.5 whitespace-nowrap">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button id="modal-sell-btn" class="py-3 bg-emerald-600 text-white font-extrabold rounded-2xl text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Sell Now</span>
+          </button>
+          <button id="modal-calc-btn" class="py-3 bg-teal-600 text-white font-extrabold rounded-2xl text-sm hover:bg-teal-700 shadow-lg shadow-teal-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+            <span>Calculator</span>
+          </button>
+          <button id="modal-edit-btn" class="py-2.5 bg-slate-100 text-slate-700 font-bold rounded-2xl text-xs hover:bg-slate-200 border border-slate-200 flex items-center justify-center space-x-1.5 transition">
+            <i data-lucide="edit" class="w-4 h-4"></i>
+            <span>Edit</span>
+          </button>
+          <button id="modal-delete-btn" class="py-2.5 bg-red-50 text-red-600 border border-red-200 font-bold rounded-2xl text-xs hover:bg-red-100 flex items-center justify-center space-x-1.5 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: BACKUP / EXPORT / IMPORT -->
+    <div id="backup-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-xl">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <h3 class="font-bold text-slate-800 text-base">Backup & Restore</h3>
+          <button data-action="closeBackupModal" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <button data-action="exportDataJSON" class="w-full py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl shadow hover:bg-emerald-700 flex items-center justify-center space-x-2">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Export Data (JSON)</span>
+          </button>
+
+          <label class="w-full py-2.5 bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-xl cursor-pointer hover:bg-slate-200 flex items-center justify-center space-x-2">
+            <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+            <span>Import Data (JSON)</span>
+            <input type="file" id="import-file-input" accept=".json,application/json" class="hidden">
+          </label>
+        </div>
+        <p class="text-[10px] text-slate-400 text-center">Save your PKR medicine database or transfer to another phone.</p>
+      </div>
+    </div>
+
+    <!-- Notification Toast Message -->
+    <div id="toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-medium shadow-xl z-50 transition-all duration-300 flex items-center space-x-2">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toast-message">Action successful</span>
+    </div>
+
+  </div>
+
+  <!-- Scripts: plain (non-module) files, order matters -->
+  <script src="js/vendor/lucide.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/medicines.js"></script>
+  <script src="js/sales.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
