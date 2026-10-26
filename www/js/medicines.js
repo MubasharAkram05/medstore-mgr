@@ -109,6 +109,7 @@ function autoCalcBoxPricing() {
 // Pack sizes as currently typed in the Add/Edit form (used by the stock fields)
 function getFormPackSizes() {
   return getPackSizes({
+    formType: document.getElementById('med-form-type').value,
     tabletsPerPata: document.getElementById('med-tablets-per-pata').value,
     stripsPerBox: document.getElementById('med-strips-per-box').value,
     totalTabsBox: document.getElementById('med-total-tabs-box').value
@@ -129,8 +130,25 @@ function updateStockPreview() {
   else {
     const text = formatUnits(result.units, formType, sizes);
     const raw = `${result.units} ${getUnitNames(formType).loose[1]}`;
-    preview.textContent = `Total: ${text}${text === raw ? '' : ` (${raw})`}`;
+    preview.textContent = `Total: ${text}${!isPackForm(formType) || text === raw ? '' : ` (${raw})`}`;
   }
+  updateStockSchemePreview(result, sizes, formType);
+}
+
+// Scheme in Add/Edit. New medicine: free items are added to the opening stock.
+// Editing: the stock fields already hold the current stock, so the scheme is
+// only remembered for the next Restock (it does not add stock here).
+function updateStockSchemePreview(qty, sizes, formType) {
+  const el = document.getElementById('stock-scheme-preview');
+  if (!el) return;
+  const scheme = readScheme('stock');
+  const isEdit = !!document.getElementById('med-id').value;
+  if (scheme.error) { el.textContent = scheme.error; el.classList.add('is-error'); return; }
+  el.classList.remove('is-error');
+  if (!scheme.active) { el.textContent = ''; return; }
+  if (isEdit) { el.textContent = `Saved for this medicine: Restock will start with Buy ${scheme.buy} + ${scheme.free} Free.`; return; }
+  if (qty.error || qty.empty || !qty.units) { el.textContent = `Buy ${scheme.buy} + ${scheme.free} Free: enter a quantity to see the free stock.`; return; }
+  el.textContent = schemePreviewText('Adding', qty, applyScheme(qty, scheme, sizes), formType, sizes);
 }
 
 // Add / Edit Form
@@ -160,15 +178,17 @@ function saveMedicine(e) {
   }
   category = canonicalType(category) || 'Other';
 
+  const single = !isPackForm(formType);
   const pataPrice = parseFloat(document.getElementById('med-pata-price').value) || 0;
-  const tabletsPerPata = parseInt(document.getElementById('med-tablets-per-pata').value) || 1;
+  // Single items (syrup, cream...): one price per item, 1 item = 1 unit
+  const tabletsPerPata = single ? 1 : (parseInt(document.getElementById('med-tablets-per-pata').value) || 1);
   const boxPriceRaw = document.getElementById('med-box-price').value;
   const boxPrice = boxPriceRaw === '' ? null : (parseFloat(boxPriceRaw) || 0);
   const stripsPerBoxRaw = document.getElementById('med-strips-per-box').value;
   const stripsPerBox = stripsPerBoxRaw === '' ? null : (parseInt(stripsPerBoxRaw) || 1);
   const totalTabsBoxRaw = document.getElementById('med-total-tabs-box').value;
   const totalTabsBox = totalTabsBoxRaw === '' ? null : (parseInt(totalTabsBoxRaw) || 0);
-  const tabletPrice = parseFloat(document.getElementById('med-tablet-price').value) || 0;
+  const tabletPrice = single ? pataPrice : (parseFloat(document.getElementById('med-tablet-price').value) || 0);
   const notes = document.getElementById('med-notes').value.trim();
   const place = document.getElementById('med-place').value;
 
@@ -176,14 +196,19 @@ function saveMedicine(e) {
   const sizes = getFormPackSizes();
   const stock = readQtyInputs('stock', sizes, formType);
   const minStock = readMinStockInput(sizes);
-  const stockError = stock.error || minStock.error;
+  const scheme = readScheme('stock');
+  const stockError = stock.error || minStock.error || scheme.error;
   document.getElementById('stock-error').textContent = stockError || '';
   if (stockError) {
     document.getElementById('stock-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
-  const stockUnits = stock.empty ? null : stock.units;
+  // New medicine: the scheme adds free items to the opening stock
+  const applied = !id && !stock.empty ? applyScheme(stock, scheme, sizes) : null;
+  const stockUnits = stock.empty ? null : (applied ? applied.totalUnits : stock.units);
   const minStockUnits = minStock.empty ? null : minStock.units;
+  const lastScheme = scheme.active ? { buy: scheme.buy, free: scheme.free } : null;
+  const singleItemUnits = single || undefined;
 
   if (id) {
     const medIndex = medicines.findIndex(m => m.id === id);
@@ -191,7 +216,7 @@ function saveMedicine(e) {
       medicines[medIndex] = {
         ...medicines[medIndex],
         name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
-        stockUnits, minStockUnits,
+        stockUnits, minStockUnits, lastScheme, singleItemUnits,
         image: currentImageData || medicines[medIndex].image
       };
     }
@@ -199,11 +224,17 @@ function saveMedicine(e) {
     const newMed = {
       id: 'med_' + Date.now(),
       name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
-      stockUnits, minStockUnits,
+      stockUnits, minStockUnits, lastScheme, singleItemUnits,
       image: currentImageData,
       createdAt: new Date().toISOString()
     };
     medicines.unshift(newMed);
+    // Opening stock with a free scheme is saved as a purchase, so bought / free stay on record
+    if (applied && applied.freeUnits > 0) {
+      purchases.unshift(buildPurchaseRecord(newMed, {
+        date: todayInputValue(), qty: stock, scheme, applied, sizes, price: null, supplier: '', notes: 'Opening stock'
+      }));
+    }
   }
 
   rememberCustomType(category);
@@ -250,8 +281,11 @@ function editMedicine(id) {
   const sizes = getPackSizes(med);
   if (hasStock(med)) fillQtyInputs('stock', med.stockUnits, sizes);
   if (med.minStockUnits !== null && med.minStockUnits !== undefined) fillMinStockInput(med.minStockUnits, sizes);
+  fillScheme('stock', med.lastScheme);
 
   document.getElementById('form-title').textContent = 'Edit Medicine';
+  // Fields were filled for this medicine's own form: no conversion needed
+  document.getElementById('medicine-form').dataset.group = '';
   updateFormTypeLabels();
   // Prices are NOT re-calculated here, so a manually changed tablet/pata
   // price is shown as it was saved.
@@ -279,6 +313,7 @@ function resetForm() {
   populateTypeSelect('Other');
   populateEditMedicinePlaces('');
   removeImage();
+  document.getElementById('medicine-form').dataset.group = '';
   updateFormTypeLabels();
 }
 
@@ -348,28 +383,70 @@ function toggleCustomCategory(val) {
 
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-// Labels follow the form type: Pata/Tab for tablets, Bottle/Unit for syrups, Pack/Unit for the rest.
-// (The old version looked for a missing #label-unit-count element and crashed.)
+// Fields and labels follow the Form:
+//   Tablet / Capsule: box + pata + tablet prices, stock in boxes / patas / loose tabs
+//   Other forms: one price ("Price per Syrup"), stock is one item count
 function updateFormTypeLabels() {
   const type = document.getElementById('med-form-type').value;
+  const single = !isPackForm(type);
+  const form = document.getElementById('medicine-form');
   const names = getUnitNames(type);
   const Pack = capitalize(names.pack[0]);
   const Loose = capitalize(names.loose[0]);
   const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
-  setText('label-pack-price', `Price / ${Pack} (Rs.) *`);
-  setText('label-per-unit-title', `Price / ${Loose} (Rs.)`);
-  setText('label-unit-count', `${capitalize(names.loose[1])} in 1 ${Pack}`);
-  setText('label-total-packs', `Total ${capitalize(names.pack[1])} in Box`);
-  setText('label-total-units', `Total ${capitalize(names.loose[1])} in Box`);
-  setText('label-stock-packs', capitalize(names.pack[1]));
-  setText('label-stock-loose', `Loose ${names.loose[1]}`);
+  // Moving between the two groups: carry the stock count over to the new fields
+  const wasSingle = form.dataset.group === 'single';
+  if (form.dataset.group && wasSingle !== single) convertStockFieldsBetweenGroups(single);
+  form.dataset.group = single ? 'single' : 'pack';
+  form.classList.toggle('is-single', single);
+
+  const tabletPrice = document.getElementById('med-tablet-price');
+  tabletPrice.required = !single;
+  if (single) {
+    setText('label-pack-price', `Price per ${itemLabel(type)} (Rs.) *`);
+    setText('price-help', `Selling price of 1 ${names.pack[0]}.`);
+    setText('label-stock-packs', capitalize(names.pack[1]));
+  } else {
+    setText('label-pack-price', `Price / ${Pack} (Rs.) *`);
+    setText('label-per-unit-title', `Price / ${Loose} (Rs.)`);
+    setText('label-unit-count', `${capitalize(names.loose[1])} in 1 ${Pack}`);
+    setText('label-total-packs', `Total ${capitalize(names.pack[1])} in Box`);
+    setText('label-total-units', `Total ${capitalize(names.loose[1])} in Box`);
+    setText('price-help', 'Box price ÷ total tablets = tablet rate. Box price ÷ total patas = pata rate.');
+    setText('label-stock-packs', capitalize(names.pack[1]));
+    setText('label-stock-loose', `Loose ${names.loose[1]}`);
+    if (!tabletPrice.value) autoCalcUnitPrice();
+  }
   const minUnit = document.getElementById('min-stock-unit');
   if (minUnit) {
     minUnit.options[1].textContent = capitalize(names.pack[1]);
     minUnit.options[2].textContent = capitalize(names.loose[1]);
   }
+  const minQty = document.getElementById('min-stock-qty');
+  if (minQty) minQty.placeholder = single ? `e.g. 3 ${names.pack[1]}` : 'e.g. 2';
   updateStockPreview();
+}
+
+// Pack -> single: total tablets become items (patas, loose as a fraction).
+// Single -> pack: each item becomes one pata.
+function convertStockFieldsBetweenGroups(toSingle) {
+  const val = id => document.getElementById(id).value.trim();
+  const set = (id, v) => { document.getElementById(id).value = v; };
+  if (toSingle) {
+    if (val('stock-boxes') === '' && val('stock-packs') === '' && val('stock-loose') === '') return;
+    const sizes = getPackSizes({
+      formType: 'Tablet',
+      tabletsPerPata: val('med-tablets-per-pata'),
+      stripsPerBox: val('med-strips-per-box'),
+      totalTabsBox: val('med-total-tabs-box')
+    });
+    const units = (Number(val('stock-boxes')) || 0) * sizes.box + (Number(val('stock-packs')) || 0) * sizes.pack + (Number(val('stock-loose')) || 0);
+    set('stock-packs', round2(units / sizes.pack));
+    set('stock-boxes', ''); set('stock-loose', '');
+  } else {
+    set('stock-boxes', ''); set('stock-loose', '');
+  }
 }
 
 // Startup / import cleanup: removes only records with the exact same name
@@ -416,6 +493,7 @@ function clearAllDataWithConfirm() {
   if (confirm('Clear all data and reset database to standard list?')) {
     clearAllStorage();
     markFormTypeMigrated();
+    markSingleItemsMigrated();
     medicines = generatePakistaniMedsWithSeeds();
     normalizeMedicines(medicines);
     salesHistory = [];
@@ -653,7 +731,9 @@ function generatePakistaniMedsWithSeeds() {
     if (seenBrands.has(brandKey)) continue;
     seenBrands.add(brandKey);
 
-    const packCount = 10;
+    // Tablets / capsules: 10 tabs per pata. Single items (syrup, cream...): 1 item = 1 unit.
+    const single = !isPackForm(form);
+    const packCount = single ? 1 : 10;
     const price = parseFloat((30 + (p * 7.5) % 180).toFixed(2));
 
     generated.push({
@@ -669,6 +749,7 @@ function generatePakistaniMedsWithSeeds() {
       totalTabsBox: 100,
       boxPrice: parseFloat((price * 10).toFixed(2)),
       tabletPrice: parseFloat((price / packCount).toFixed(2)),
+      singleItemUnits: single || undefined,
       stock: null,
       notes: `Common Pakistani brand item. Manufacturer: ${manufacturer}.`,
       image: "",

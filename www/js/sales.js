@@ -8,13 +8,16 @@ function openSellModal(id) {
 
   currentSellMed = med;
   const names = getUnitNames(med.formType);
+  const single = !isPackForm(med.formType);
+  // Single items (syrup, cream...): one quantity field
+  document.getElementById('sell-modal').classList.toggle('is-single', single);
 
   document.getElementById('sell-med-id').value = med.id;
   document.getElementById('sell-med-name').textContent = med.name;
   renderSellStockText(med);
   document.getElementById('sell-med-img').src = med.image || placeholderImage(med.name.charAt(0));
 
-  document.getElementById('sell-pack-label').textContent = capitalize(names.pack[1]);
+  document.getElementById('sell-pack-label').textContent = single ? `Quantity (${names.pack[1]})` : capitalize(names.pack[1]);
   document.getElementById('sell-unit-label').textContent = `Loose ${names.loose[1]}`;
   document.getElementById('sell-pack-qty').value = 1;
   document.getElementById('sell-unit-qty').value = 0;
@@ -36,11 +39,16 @@ function closeSellModal() {
   currentSellMed = null;
 }
 
+// Loose quantity only exists for tablets / capsules
+function sellLooseQty(med) {
+  return isPackForm(med.formType) ? (parseFloat(document.getElementById('sell-unit-qty').value) || 0) : 0;
+}
+
 function calcSellTotal() {
   if (!currentSellMed) return;
 
   const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
-  const units = parseFloat(document.getElementById('sell-unit-qty').value) || 0;
+  const units = sellLooseQty(currentSellMed);
 
   const totalBill = (packs * currentSellMed.pataPrice) + (units * currentSellMed.tabletPrice);
   document.getElementById('sell-total-bill').textContent = `Rs. ${totalBill.toFixed(2)}`;
@@ -85,7 +93,7 @@ function confirmRecordSale() {
   if (!currentSellMed) return;
 
   const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
-  const units = parseFloat(document.getElementById('sell-unit-qty').value) || 0;
+  const units = sellLooseQty(currentSellMed);
 
   const error = recordSale(currentSellMed, packs, units);
   document.getElementById('sell-error').textContent = error;
@@ -219,11 +227,17 @@ function populateCalcDropdown(showResults = false) {
   const filterText = searchInput ? (searchInput.value || '').toLowerCase().trim() : '';
   if (clearBtn) clearBtn.classList.toggle('hidden', !filterText);
 
-  const selectedId = select.value;
+  // Only a medicine the user picked is selected. (Before, the hidden dropdown
+  // fell back to its first option, so Panadol came back after Reset.)
+  const selectedId = calcSelectedId && medicines.some(m => m.id === calcSelectedId) ? calcSelectedId : '';
   const filtered = medicines.filter(m => !filterText || m.name.toLowerCase().includes(filterText) || (m.category && m.category.toLowerCase().includes(filterText))).slice(0, 100);
 
-  select.innerHTML = filtered.length ? filtered.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('') : '<option value="">No items found</option>';
-  if (selectedId && medicines.some(m => m.id === selectedId)) select.value = selectedId;
+  const selectedMed = selectedId ? medicines.find(m => m.id === selectedId) : null;
+  const options = filtered.filter(m => m.id !== selectedId);
+  select.innerHTML = '<option value="">Select medicine</option>' +
+    (selectedMed ? `<option value="${selectedMed.id}">${escapeHtml(selectedMed.name)}</option>` : '') +
+    options.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+  select.value = selectedId;
 
   if (results) {
     if (!showResults && document.activeElement !== searchInput) { results.classList.add('hidden'); }
@@ -248,7 +262,8 @@ function selectCalcMedicine(id) {
   const results = document.getElementById('calc-medicine-results');
   const med = medicines.find(m => m.id === id);
   if (!select || !med) return;
-  select.innerHTML = `<option value="${med.id}">${escapeHtml(med.name)}</option>`;
+  calcSelectedId = med.id;
+  select.innerHTML = `<option value="">Select medicine</option><option value="${med.id}">${escapeHtml(med.name)}</option>`;
   select.value = med.id;
   if (input) input.value = med.name;
   if (results) results.classList.add('hidden');
@@ -268,9 +283,10 @@ function clearCalcSearch() {
   if (clearBtn) clearBtn.classList.add('hidden');
   if (results) { results.innerHTML = ''; results.classList.add('hidden'); }
   if (select) {
-    select.innerHTML = '';
+    select.innerHTML = '<option value="">Select medicine</option>';
     select.value = '';
   }
+  calcSelectedId = null;
   // Clear auto-filled medicine/pricing details and calculation result.
   ['calc-box-price','calc-total-tabs-box','calc-strips-box','calc-price-pata','calc-units-pata'].forEach(id => {
     const el = document.getElementById(id);
@@ -290,6 +306,15 @@ function clearCalcSearch() {
   if (tabsDisplay) tabsDisplay.textContent = '—';
   const card = document.getElementById('calc-summary-card');
   if (card) card.classList.add('hidden');
+  ['calc-name', 'calc-prices-text', 'calc-pack-info', 'calc-stock-text'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  const unitPrice = document.getElementById('calc-unit-price');
+  if (unitPrice) unitPrice.textContent = '0.00';
+  const saleError = document.getElementById('calc-sale-error');
+  if (saleError) saleError.textContent = '';
+  setCalcGroup(true);
   return false;
 }
 
@@ -299,7 +324,8 @@ function resetCalculator() {
   const results = document.getElementById('calc-medicine-results');
   if (results) { results.innerHTML = ''; results.classList.add('hidden'); }
   const select = document.getElementById('calc-med-select');
-  if (select) { select.innerHTML = ''; select.value = ''; }
+  if (select) { select.innerHTML = '<option value="">Select medicine</option>'; select.value = ''; }
+  calcSelectedId = null;
   const searchInput = document.getElementById('calc-search-input');
   if (searchInput) searchInput.value = '';
   const clearBtn = document.getElementById('clear-calc-search');
@@ -322,6 +348,9 @@ function updateCalcDetails() {
   }
 
   card.classList.remove('hidden');
+  const single = !isPackForm(med.formType);
+  const names = getUnitNames(med.formType);
+  setCalcGroup(!single);
   const calcSearch = document.getElementById('calc-search-input');
   if (calcSearch && document.activeElement !== calcSearch) calcSearch.value = med.name;
   document.getElementById('calc-img').src = med.image || placeholderImage(med.name.charAt(0));
@@ -330,8 +359,16 @@ function updateCalcDetails() {
   const strips = Number(med.stripsPerBox || 0);
   const unitsPerPata = Number(med.tabletsPerPata || 0);
   const totalTabs = Number(med.totalTabsBox || 0) || (strips * unitsPerPata);
-  document.getElementById('calc-prices-text').textContent = `Pata: Rs. ${Number(med.pataPrice || 0).toFixed(2)} | Tablet: Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
-  document.getElementById('calc-pack-info').textContent = strips > 0 ? `${strips} pata/box • ${unitsPerPata || (totalTabs && strips ? (totalTabs/strips).toFixed(2) : '—')} tablets/pata` : 'Pack details not available';
+  document.getElementById('calc-prices-text').textContent = single
+    ? `Price per ${names.pack[0]}: Rs. ${Number(med.pataPrice || 0).toFixed(2)}`
+    : `Pata: Rs. ${Number(med.pataPrice || 0).toFixed(2)} | Tablet: Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
+  document.getElementById('calc-pack-info').textContent = single ? itemLabel(med.formType) : (strips > 0 ? `${strips} pata/box • ${unitsPerPata || (totalTabs && strips ? (totalTabs/strips).toFixed(2) : '—')} tablets/pata` : 'Pack details not available');
+
+  // Clear the previous medicine's values first (empty fields used to keep them)
+  ['calc-box-price', 'calc-total-tabs-box', 'calc-strips-box', 'calc-price-pata', 'calc-units-pata'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
 
   const setVal=(id,val)=>{const el=document.getElementById(id); if(el && Number(val)>0) el.value=Number(val).toFixed(2).replace(/\.00$/,'');};
   setVal('calc-box-price', boxPrice);
@@ -343,9 +380,10 @@ function updateCalcDetails() {
   document.getElementById('calc-box-price-display').textContent = boxPrice > 0 ? `Rs. ${boxPrice.toFixed(2)}` : 'Rs. —';
   document.getElementById('calc-total-tabs-display').textContent = totalTabs > 0 ? totalTabs.toLocaleString() : '—';
 
-  const formType = med.formType || 'Tablet';
-  document.getElementById('calc-pata-label').textContent = formType === 'Tablet' ? 'Strips / Pata' : 'Pack / Bottle';
-  document.getElementById('calc-tablet-label').textContent = formType === 'Tablet' ? 'Loose Tablets' : 'Loose Tablets';
+  document.getElementById('calc-pata-label').textContent = single ? `Quantity (${names.pack[1]})` : 'Strips / Pata';
+  document.getElementById('calc-tablet-label').textContent = 'Loose Tablets';
+  document.getElementById('calc-price-label').textContent = single ? `Price per ${itemLabel(med.formType)} (Rs.)` : 'Price / Pata (Rs.) *';
+  document.getElementById('calc-qty-help').textContent = single ? `Enter how many ${names.pack[1]}` : 'Enter pata/strip and loose tablet quantity';
   const calcStock = document.getElementById('calc-stock-text');
   if (calcStock) calcStock.textContent = `Stock: ${stockText(med)}`;
 
@@ -363,7 +401,7 @@ function calculateTotal() {
   }
 
   const pataQty = parseFloat(document.getElementById('calc-pata-qty').value) || 0;
-  const tabQty = parseFloat(document.getElementById('calc-tablet-qty').value) || 0;
+  const tabQty = isPackForm(med.formType) ? (parseFloat(document.getElementById('calc-tablet-qty').value) || 0) : 0;
 
   const pataRate = Number(med.pataPrice || 0);
   let tabletRate = Number(med.tabletPrice || 0);
@@ -373,7 +411,13 @@ function calculateTotal() {
   const total = (pataQty * pataRate) + (tabQty * tabletRate);
   document.getElementById('calc-total-result').textContent = `Rs. ${total.toFixed(2)}`;
   const breakdown=document.getElementById('calc-breakdown');
-  if(breakdown) breakdown.textContent = `${pataQty} pata × Rs. ${pataRate.toFixed(2)} + ${tabQty} tablets × Rs. ${tabletRate.toFixed(2)}`;
+  if (breakdown) {
+    const names = getUnitNames(med.formType);
+    // Single items: quantity x price per item
+    breakdown.textContent = isPackForm(med.formType)
+      ? `${pataQty} pata × Rs. ${pataRate.toFixed(2)} + ${tabQty} tablets × Rs. ${tabletRate.toFixed(2)}`
+      : `${pataQty} ${pataQty === 1 ? names.pack[0] : names.pack[1]} × Rs. ${pataRate.toFixed(2)}`;
+  }
   // Live stock check for "Record as Completed Sale"
   const saleError = document.getElementById('calc-sale-error');
   if (saleError) saleError.textContent = (pataQty > 0 || tabQty > 0) ? checkStockForSale(med, pataQty, tabQty).error : '';
@@ -387,7 +431,7 @@ function recordSaleFromCalc() {
   if (!med) return;
 
   const pataQty = parseFloat(document.getElementById('calc-pata-qty').value) || 0;
-  const tabQty = parseFloat(document.getElementById('calc-tablet-qty').value) || 0;
+  const tabQty = isPackForm(med.formType) ? (parseFloat(document.getElementById('calc-tablet-qty').value) || 0) : 0;
 
   if (pataQty <= 0 && tabQty <= 0) {
     showToast('Please enter quantities to record sale.');
@@ -404,4 +448,10 @@ function recordSaleFromCalc() {
 function openCalcModal(id) {
   switchTab('calc');
   selectCalcMedicine(id);
+}
+
+// Calculator layout: tablet / capsule (box, pata, loose) or single item (one price, one quantity)
+function setCalcGroup(pack) {
+  const screen = document.getElementById('screen-calc');
+  if (screen) screen.classList.toggle('is-single', !pack);
 }

@@ -130,7 +130,8 @@ const FORM_ICONS = {
 const TYPE_CLASSES = {
   'Antibiotic': 'type-antibiotic', 'Fever': 'type-fever', 'Painkiller': 'type-painkiller', 'Stomach': 'type-stomach',
   'Cough & Cold': 'type-cough', 'Allergy': 'type-allergy', 'Vitamins': 'type-vitamins', 'Diabetes': 'type-diabetes',
-  'Blood Pressure / Heart': 'type-heart', 'Skin': 'type-skin', 'Eye / Ear': 'type-eye', 'First Aid': 'type-firstaid', 'Other': 'type-other'
+  'Blood Pressure / Heart': 'type-heart', 'Skin': 'type-skin', 'Eye / Ear': 'type-eye', 'First Aid': 'type-firstaid',
+  'Pampers': 'type-pampers', 'Other': 'type-other'
 };
 
 function formClass(form) {
@@ -178,6 +179,7 @@ function stockBadgeShort(med) {
   if (status === 'unset') return { cls: 'mp-stock-unset', text: 'Stock not set' };
   if (status === 'out') return { cls: 'mp-stock-out', text: 'Out of stock' };
   if (status === 'low') return { cls: 'mp-stock-low', text: 'Low' };
+  if (!isPackForm(med.formType)) return { cls: 'mp-stock-ok', text: formatMedUnits(med, med.stockUnits) };
   const sizes = getPackSizes(med);
   const names = getUnitNames(med.formType);
   const parts = splitUnits(Number(med.stockUnits), sizes);
@@ -319,10 +321,38 @@ function setListView(view) {
 }
 
 // Navigation and Tab switching
-function switchTab(tab) {
+// Tabs visited, for the back button (Add/Edit is never re-opened by "back")
+let tabHistory = [];
+
+function popTabHistory() {
+  while (tabHistory.length) {
+    const t = tabHistory.pop();
+    if (t !== activeTab && t !== 'add') return t;
+  }
+  return null;
+}
+
+// Values of the Add/Edit form, to tell if the user changed something
+let addFormSnapshot = '';
+function addFormState() {
+  const form = document.getElementById('medicine-form');
+  const values = [...form.querySelectorAll('input:not([type=file]), select, textarea')].map(el => el.id + '=' + el.value);
+  return values.join('|') + '|img=' + (currentImageData || '').length;
+}
+function isAddFormDirty() {
+  return addFormState() !== addFormSnapshot;
+}
+
+function switchTab(tab, opts = {}) {
   // Remember where "Add" was opened from, so Save/Cancel can go back there
   if (tab === 'add' && activeTab !== 'add') tabBeforeAdd = activeTab;
+  if (!opts.fromBack && tab !== activeTab && activeTab !== 'add') {
+    tabHistory.push(activeTab);
+    if (tabHistory.length > 20) tabHistory.shift();
+  }
+  const enteringAdd = tab === 'add' && activeTab !== 'add';
   activeTab = tab;
+  if (enteringAdd) addFormSnapshot = addFormState();
   saveActiveTab(tab);
   ['home', 'add', 'calc', 'stats', 'profile'].forEach(t => {
     const sec = document.getElementById(`screen-${t}`);
@@ -375,16 +405,19 @@ function openDetailsModal(id) {
   document.getElementById('modal-box-detail').textContent = Number(med.stripsPerBox || 0) > 0 ? `${med.stripsPerBox} patas / box` : 'Complete box';
   document.getElementById('modal-total-tabs').textContent = totalTabs > 0 ? totalTabs.toLocaleString() : '—';
   document.getElementById('modal-total-tabs-detail').textContent = totalTabs > 0 ? 'Tablets in box' : 'Not added';
+  const single = !isPackForm(formType);
+  // Single items: one price tile ("Price per Syrup")
+  document.getElementById('details-modal').classList.toggle('is-single', single);
+  document.getElementById('modal-pack-title').textContent = single ? `Price per ${itemLabel(formType)}` : 'Price Per Pata';
   document.getElementById('modal-pata-price').textContent = `Rs. ${Number(med.pataPrice || 0).toFixed(2)}`;
-  document.getElementById('modal-pata-count').textContent = `(${Number(med.tabletsPerPata || 0)} ${names.loose[1]} / ${packLabel})`;
+  document.getElementById('modal-pata-count').textContent = single ? `1 ${names.pack[0]}` : `(${Number(med.tabletsPerPata || 0)} ${names.loose[1]} / ${packLabel})`;
   document.getElementById('modal-tablet-price').textContent = `Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
   document.getElementById('modal-stock-text').textContent = '';
   renderDetailsStock(med);
-  renderRestockHistory(med);
   const modalPlaceDisplay = document.getElementById('modal-place-display');
   if (modalPlaceDisplay) modalPlaceDisplay.textContent = med.place || 'Not assigned';
 
-  // Sell / Calculator / Edit / Delete buttons are wired once in app.js
+  // Sell / Restock / Edit / Delete buttons are wired once in app.js
   // and read currentDetailsMedicineId.
 
   document.getElementById('details-modal').classList.remove('hidden');

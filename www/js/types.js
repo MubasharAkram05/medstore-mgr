@@ -7,7 +7,15 @@ const FORMS = ['Tablet', 'Capsule', 'Syrup', 'Suspension', 'Injection', 'Drops',
   'Ointment', 'Liquid', 'Sachet', 'Powder', 'Inhaler'];
 
 const TYPES = ['Antibiotic', 'Fever', 'Painkiller', 'Stomach', 'Cough & Cold', 'Allergy', 'Vitamins',
-  'Diabetes', 'Blood Pressure / Heart', 'Skin', 'Eye / Ear', 'First Aid', 'Other'];
+  'Diabetes', 'Blood Pressure / Heart', 'Skin', 'Eye / Ear', 'First Aid', 'Pampers', 'Other'];
+
+// Pack forms are sold as Box > Pata > Tablet. Every other form is a single
+// item (one bottle, tube, vial...) with one price and a simple item count.
+const PACK_FORMS = ['Tablet', 'Capsule'];
+
+function isPackForm(form) {
+  return PACK_FORMS.includes(canonicalForm(form) || form || 'Tablet');
+}
 
 const CUSTOM_TYPE_VALUE = '__custom__';
 
@@ -26,7 +34,7 @@ const FORM_ALIASES = {
 // Old type names from the previous category list
 const TYPE_ALIASES = {
   cardiovascular: 'Blood Pressure / Heart', heart: 'Blood Pressure / Heart', 'blood pressure': 'Blood Pressure / Heart',
-  gastro: 'Stomach', general: 'Other', 'eye/ear': 'Eye / Ear', 'eye & ear': 'Eye / Ear',
+  gastro: 'Stomach', general: 'Other', diapers: 'Pampers', diaper: 'Pampers', 'baby diapers': 'Pampers', 'eye/ear': 'Eye / Ear', 'eye & ear': 'Eye / Ear',
   'cough and cold': 'Cough & Cold', 'cough & cold': 'Cough & Cold', vitamin: 'Vitamins', antibiotics: 'Antibiotic', painkillers: 'Painkiller'
 };
 
@@ -88,6 +96,7 @@ function getAllForms() {
 // ---------- Guessing the Type from the medicine / generic name ----------
 // Each word is matched at the start of a word ("fenac" matches "A-Fenac").
 const TYPE_RULES = [
+  ['Pampers', ['pampers', 'diaper', 'diapers', 'nappy', 'nappies']],
   ['Fever', ['paracetamol', 'panadol', 'calpol', 'vamol', 'pracmol', 'acetaminophen']],
   ['Painkiller', ['diclofenac', 'ibuprofen', 'mefenamic', 'fenac', 'brufen', 'brugesic', 'ponstan', 'naproxen', 'synflex',
     'ketoprofen', 'ketorolac', 'aceclofenac', 'etoricoxib', 'celecoxib', 'meloxicam', 'piroxicam', 'indomethacin', 'aspirin',
