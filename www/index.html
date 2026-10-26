@@ -32,9 +32,9 @@
         <p class="text-xs text-emerald-50">Stock &amp; Sales Manager (Rs.)</p>
       </div>
       <div class="flex items-center space-x-1.5">
-        <button id="header-profile-btn" data-action="switchTab" data-tab="profile" class="text-white flex items-center justify-center border" title="Profile &amp; Settings" aria-label="Profile and settings">
-          <img id="header-avatar-img" src="" alt="" class="w-8 h-8 rounded-full object-cover hidden">
-          <i id="header-avatar-icon" data-lucide="user" class="w-5 h-5"></i>
+        <button id="header-cart-btn" type="button" data-action="openCart" class="text-white flex items-center justify-center border" title="Cart" aria-label="Cart, empty">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          <span id="cart-badge" class="mp-cart-badge hidden" aria-hidden="true">0</span>
         </button>
       </div>
     </header>
@@ -553,7 +553,7 @@
           <p id="calc-sale-error" class="mp-inline-error text-center" role="alert"></p>
           <button data-action="recordSaleFromCalc" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1.5">
             <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-            <span>Record as Completed Sale</span>
+            <span>Add to Cart</span>
           </button>
         </div>
       </section>
@@ -823,16 +823,37 @@
           <p id="sell-error" class="mp-inline-error" role="alert"></p>
         </div>
 
-        <!-- Sticky footer: always visible -->
-        <div class="mp-sheet-footer flex space-x-2">
+        <!-- Sticky footer: always visible. Confirm adds the item to the cart -->
+        <div class="mp-sheet-footer mp-sell-footer flex space-x-2">
           <button data-action="closeSellModal" class="w-1/3 mp-btn border border-slate-300 text-slate-600 hover:bg-slate-100">
             Cancel
           </button>
           <button data-action="confirmRecordSale" class="w-2/3 mp-btn bg-emerald-600 hover:bg-emerald-700 text-white shadow">
-            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-            <span>Confirm &amp; Complete Sale</span>
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Confirm</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CART (multi-item sale) -->
+    <div id="cart-modal" class="hidden mp-modal-backdrop bg-slate-900/60 backdrop-blur-sm">
+      <div class="mp-sheet mp-cart-sheet" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="mp-sheet-header">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+              <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            </div>
+            <h3 id="cart-title" class="font-bold text-slate-800 text-base">Cart</h3>
+          </div>
+          <button type="button" data-action="closeCart" class="mp-icon-btn text-slate-400 hover:text-slate-600" aria-label="Close cart">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div id="cart-body" class="mp-sheet-body space-y-2"></div>
+        <p id="cart-error" class="mp-inline-error mp-cart-error" role="alert"></p>
+        <!-- Grand total + actions: always visible -->
+        <div id="cart-footer" class="mp-sheet-footer space-y-2 hidden"></div>
       </div>
     </div>
 
@@ -1052,6 +1073,7 @@
   <script src="js/medicines.js"></script>
   <script src="js/stock.js"></script>
   <script src="js/sales.js"></script>
+  <script src="js/cart.js"></script>
   <script src="js/reports.js"></script>
   <script src="js/backup.js"></script>
   <script src="js/ui.js"></script>

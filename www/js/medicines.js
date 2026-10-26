@@ -497,6 +497,9 @@ function clearAllDataWithConfirm() {
     medicines = generatePakistaniMedsWithSeeds();
     normalizeMedicines(medicines);
     salesHistory = [];
+    cart = [];
+    writeCart(cart);
+    renderCartBadge();
     purchases = [];
     listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
     saveToLocalStorage();

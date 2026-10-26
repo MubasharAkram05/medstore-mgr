@@ -36,7 +36,15 @@ const CLICK_ACTIONS = {
   setListView: el => setListView(el.dataset.view),
   setTheme: el => setThemeSetting(el.dataset.themeOption),
   openDetailsModal: el => openDetailsModal(el.dataset.id),
-  selectCalcMedicine: el => selectCalcMedicine(el.dataset.id)
+  selectCalcMedicine: el => selectCalcMedicine(el.dataset.id),
+  // Cart
+  openCart: () => openCart(),
+  closeCart: () => closeCart(),
+  cartQtyPlus: el => changeCartQty(el.dataset.id, 1),
+  cartQtyMinus: el => changeCartQty(el.dataset.id, -1),
+  removeCartLine: el => removeCartLine(el.dataset.id),
+  clearCartConfirm: () => clearCartConfirm(),
+  completeSale: () => completeSale()
 };
 
 function on(id, event, handler) {
@@ -46,6 +54,8 @@ function on(id, event, handler) {
 
 function bindEvents() {
   document.addEventListener('click', e => {
+    // Tap outside the cart sheet closes it
+    if (e.target.id === 'cart-modal') { closeCart(); return; }
     const el = e.target.closest('[data-action]');
     if (!el) return;
     const action = CLICK_ACTIONS[el.dataset.action];
@@ -150,6 +160,8 @@ window.addEventListener('load', () => {
   listView = readListView();
   loadLocalStorage();
   loadUserProfile();
+  cart = readCart();
+  renderCartBadge();
   populateEditMedicinePlaces('');
   populateTypeSelect('Other');
   updateFormTypeLabels();
@@ -180,6 +192,7 @@ function setupBackButton() {
 // Closes the top-most open popup / panel. Returns true if something was closed.
 function closeTopOverlay() {
   const open = id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); };
+  if (open('cart-modal')) { closeCart(); return true; }
   if (open('restock-modal')) { closeRestockModal(); return true; }
   if (open('sell-modal')) { closeSellModal(); return true; }
   if (open('backup-modal')) { closeBackupModal(); return true; }
