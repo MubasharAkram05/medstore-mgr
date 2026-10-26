@@ -12,6 +12,8 @@ let currentImageData = '';
 let activeTab = 'home';
 let isBulkSelectMode = false;
 let selectedMedIds = new Set();
+// Medicine cards currently shown in the list (bulk select works only on these)
+let visibleMedIds = new Set();
 let currentSellMed = null;
 let currentRestockMed = null;
 let tabBeforeAdd = 'home';

@@ -63,7 +63,6 @@ function bindEvents() {
   on('filter-form', 'change', e => setListFilter('form', e.target.value));
   on('filter-stock', 'change', e => setListFilter('stock', e.target.value));
   on('sort-select', 'change', handleSearchFilter);
-  on('select-all-check', 'change', e => toggleSelectAll(e.target.checked));
 
   // Add / edit form
   on('medicine-form', 'submit', saveMedicine);

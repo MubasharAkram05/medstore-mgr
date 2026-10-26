@@ -140,12 +140,16 @@ function renderMedicineList() {
   if (filtered.length === 0) {
     listContainer.innerHTML = '';
     emptyState.classList.remove('hidden');
+    visibleMedIds = new Set();
+    pruneSelectionToVisible();
     return;
   } else {
     emptyState.classList.add('hidden');
   }
 
   const displayItems = filtered.slice(0, 100);
+  visibleMedIds = new Set(displayItems.map(m => m.id));
+  pruneSelectionToVisible();
 
   listContainer.innerHTML = displayItems.map(med => {
     const isSelected = selectedMedIds.has(med.id);

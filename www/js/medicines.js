@@ -350,6 +350,18 @@ function updateFormTypeLabels() {
   updateStockPreview();
 }
 
+function updateSelectedCount() {
+  const el = document.getElementById('selected-count-text');
+  if (el) el.textContent = `${selectedMedIds.size} selected`;
+}
+
+// Called after every list render: un-select medicines that are no longer shown
+// (filter / search changed), so "Delete Selected" can never delete hidden items.
+function pruneSelectionToVisible() {
+  selectedMedIds.forEach(id => { if (!visibleMedIds.has(id)) selectedMedIds.delete(id); });
+  updateSelectedCount();
+}
+
 function toggleBulkSelectMode() {
   isBulkSelectMode = !isBulkSelectMode;
   const bar = document.getElementById('bulk-action-bar');
@@ -361,8 +373,8 @@ function toggleBulkSelectMode() {
   } else {
     bar.classList.add('hidden');
     btnText.textContent = 'Select';
-    selectedMedIds.clear();
   }
+  selectedMedIds.clear();
   renderMedicineList();
 }
 
@@ -375,30 +387,26 @@ function exitBulkSelectMode() {
 }
 
 function toggleSelectMed(id, checked) {
-  if (checked) selectedMedIds.add(id);
+  if (checked && visibleMedIds.has(id)) selectedMedIds.add(id);
   else selectedMedIds.delete(id);
-  document.getElementById('selected-count-text').textContent = `${selectedMedIds.size} selected`;
-}
-
-function toggleSelectAll(checked) {
-  if (checked) {
-    medicines.forEach(m => selectedMedIds.add(m.id));
-  } else {
-    selectedMedIds.clear();
-  }
-  document.getElementById('selected-count-text').textContent = `${selectedMedIds.size} selected`;
-  renderMedicineList();
+  updateSelectedCount();
 }
 
 function deleteSelectedMedicines() {
-  if (selectedMedIds.size === 0) return;
-  if (confirm(`Delete ${selectedMedIds.size} selected medicines?`)) {
-    medicines = medicines.filter(m => !selectedMedIds.has(m.id));
+  // Only medicines that are selected AND currently shown
+  const ids = new Set([...selectedMedIds].filter(id => visibleMedIds.has(id)));
+  const count = ids.size;
+  if (count === 0) {
+    showToast('No medicines selected.');
+    return;
+  }
+  if (confirm(`Delete ${count} ${count === 1 ? 'medicine' : 'medicines'}?`)) {
+    medicines = medicines.filter(m => !ids.has(m.id));
     exitBulkSelectMode();
     saveToLocalStorage();
     renderListFilters();
     renderMedicineList();
-    showToast('Selected items deleted.');
+    showToast(`${count} ${count === 1 ? 'medicine' : 'medicines'} deleted.`);
   }
 }
 
