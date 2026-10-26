@@ -52,19 +52,24 @@ function medicineAutoImage(med) {
 
 // Home list filters: Category, Form Type and Stock dropdowns.
 // Options come from the medicines that are actually saved.
+// Home filters: Form (fixed list), Type (fixed list + custom types) and Stock.
 function renderListFilters() {
-  const fill = (id, values, selected) => {
+  const fill = (id, groups, selected) => {
     const select = document.getElementById(id);
     if (!select) return selected;
-    const sorted = [...new Set(values)].sort((a, b) => a.localeCompare(b));
-    select.innerHTML = '<option value="ALL">All</option>' + sorted.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    // A saved filter whose value no longer exists falls back to "All"
-    const value = sorted.includes(selected) ? selected : 'ALL';
+    const all = groups.flatMap(g => g.values);
+    select.innerHTML = '<option value="ALL">All</option>' + groups.map(g => {
+      const options = g.values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      return g.label && g.values.length ? `<optgroup label="${escapeHtml(g.label)}">${options}</optgroup>` : options;
+    }).join('');
+    // Saved value in another letter case still matches; unknown values fall back to "All"
+    const value = all.find(v => textKey(v) === textKey(selected)) || 'ALL';
     select.value = value;
     return value;
   };
-  listFilters.category = fill('filter-category', medicines.map(m => m.category || 'Other'), listFilters.category);
-  listFilters.form = fill('filter-form', medicines.map(m => m.formType || 'Tablet'), listFilters.form);
+  const types = getAllTypes();
+  listFilters.category = fill('filter-category', [{ values: types.fixed }, { label: 'Your types', values: types.customs }], listFilters.category);
+  listFilters.form = fill('filter-form', [{ values: getAllForms() }], listFilters.form);
   const stockSelect = document.getElementById('filter-stock');
   if (stockSelect) {
     if (!['ALL', 'LOW', 'OUT'].includes(listFilters.stock)) listFilters.stock = 'ALL';
@@ -121,8 +126,8 @@ function renderMedicineList() {
   const sortVal = document.getElementById('sort-select').value;
 
   let filtered = medicines.filter(m => {
-    const matchesCategory = listFilters.category === 'ALL' || (m.category || 'Other') === listFilters.category;
-    const matchesForm = listFilters.form === 'ALL' || (m.formType || 'Tablet') === listFilters.form;
+    const matchesCategory = listFilters.category === 'ALL' || textKey(m.category || 'Other') === textKey(listFilters.category);
+    const matchesForm = listFilters.form === 'ALL' || textKey(m.formType || 'Tablet') === textKey(listFilters.form);
     const matchesSearch = !searchVal || m.name.toLowerCase().includes(searchVal) || (m.notes && m.notes.toLowerCase().includes(searchVal)) || (m.formType && m.formType.toLowerCase().includes(searchVal));
     return matchesCategory && matchesForm && matchesStockFilter(m) && matchesSearch;
   });
@@ -140,34 +145,24 @@ function renderMedicineList() {
   if (filtered.length === 0) {
     listContainer.innerHTML = '';
     emptyState.classList.remove('hidden');
-    visibleMedIds = new Set();
-    pruneSelectionToVisible();
     return;
   } else {
     emptyState.classList.add('hidden');
   }
 
   const displayItems = filtered.slice(0, 100);
-  visibleMedIds = new Set(displayItems.map(m => m.id));
-  pruneSelectionToVisible();
 
   listContainer.innerHTML = displayItems.map(med => {
-    const isSelected = selectedMedIds.has(med.id);
     const formType = med.formType || 'Tablet';
     const generic = med.notes ? String(med.notes).split(',')[0].trim() : (med.generic || 'Medicine');
 
     return `
-      <div class="mp-medicine-card group ${isSelected ? 'mp-card-selected' : ''}">
+      <div class="mp-medicine-card group">
         <div class="mp-card-glow"></div>
-        ${isBulkSelectMode ? `
-          <div class="mp-select-wrap">
-            <input type="checkbox" ${isSelected ? 'checked' : ''} data-action="toggleSelectMed" data-id="${med.id}" class="w-5 h-5 accent-emerald-600 rounded cursor-pointer">
-          </div>
-        ` : ''}
 
         <div class="mp-card-top">
           <span class="mp-form-badge ${getFormBadgeClass(formType)}">${escapeHtml(formType)}</span>
-          <button type="button" data-action="openDetailsModal" data-id="${med.id}" class="mp-more" aria-label="More details">
+          <button type="button" data-action="openCardMenu" data-id="${med.id}" class="mp-more" aria-label="More options for ${escapeHtml(med.name)}" aria-haspopup="menu">
             <i data-lucide="more-vertical" class="w-4 h-4"></i>
           </button>
         </div>
@@ -201,6 +196,38 @@ function renderMedicineList() {
   }
 
   lucide.createIcons();
+}
+
+// ---------- Card 3-dot menu: Details / Edit / Delete ----------
+function openCardMenu(button) {
+  const menu = document.getElementById('card-menu');
+  const id = button.dataset.id;
+  if (!menu.classList.contains('hidden') && menu.dataset.id === id) { closeCardMenu(); return; }
+  menu.dataset.id = id;
+  menu.querySelectorAll('[data-id]').forEach(el => { el.dataset.id = id; });
+  menu.classList.remove('hidden');
+  menu.dataset.openedAt = String(Date.now());
+  // Place it under the button, kept inside the screen
+  const r = button.getBoundingClientRect();
+  const w = menu.offsetWidth, h = menu.offsetHeight;
+  const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+  let top = r.bottom + 4;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  lucide.createIcons();
+}
+
+// List scrolled: close the menu, but not for the small scroll that can
+// still be running right after the tap that opened it
+function closeCardMenuOnScroll() {
+  const menu = document.getElementById('card-menu');
+  if (menu && Date.now() - Number(menu.dataset.openedAt || 0) > 300) closeCardMenu();
+}
+
+function closeCardMenu() {
+  const menu = document.getElementById('card-menu');
+  if (menu) menu.classList.add('hidden');
 }
 
 function cardStockHtml(med) {

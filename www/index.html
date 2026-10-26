@@ -85,12 +85,12 @@
           </div>
           <div id="list-filters" class="mp-filter-grid">
             <label class="mp-filter">
-              <span>Category</span>
-              <select id="filter-category" aria-label="Filter by category"><option value="ALL">All</option></select>
+              <span>Form</span>
+              <select id="filter-form" aria-label="Filter by form"><option value="ALL">All</option></select>
             </label>
             <label class="mp-filter">
-              <span>Form Type</span>
-              <select id="filter-form" aria-label="Filter by form type"><option value="ALL">All</option></select>
+              <span>Type</span>
+              <select id="filter-category" aria-label="Filter by type"><option value="ALL">All</option></select>
             </label>
             <label class="mp-filter">
               <span>Stock</span>
@@ -102,14 +102,10 @@
             </label>
           </div>
 
-          <!-- Sort & Bulk Action Toolbar -->
+          <!-- Count & Sort Toolbar -->
           <div class="flex justify-between items-center text-xs text-slate-500 pt-0.5 px-1">
             <div class="flex items-center space-x-2">
               <span id="med-count-badge" class="font-medium text-slate-600">0 items found</span>
-              <button data-action="toggleBulkSelectMode" id="bulk-toggle-btn" class="text-emerald-700 hover:text-emerald-800 font-bold bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md transition flex items-center space-x-1">
-                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
-                <span id="bulk-btn-text">Select</span>
-              </button>
             </div>
 
             <div class="flex items-center space-x-1">
@@ -123,21 +119,6 @@
             </div>
           </div>
 
-          <!-- Bulk Selection Action Bar -->
-          <div id="bulk-action-bar" class="hidden bg-slate-800 text-white rounded-xl p-2.5 flex items-center justify-between shadow-lg">
-            <div class="flex items-center space-x-2 pl-1">
-              <span id="selected-count-text" class="text-xs font-semibold text-slate-200">0 selected</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button data-action="deleteSelectedMedicines" class="min-h-[44px] bg-red-500 hover:bg-red-600 px-3 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                <span>Delete Selected</span>
-              </button>
-              <button data-action="exitBulkSelectMode" class="w-11 h-11 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white" aria-label="Exit select mode">
-                <i data-lucide="x" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Medicine Cards Container -->
@@ -203,16 +184,17 @@
             <input type="text" id="med-name" required placeholder="e.g. Panadol Extra, Hydryllin, Rigix" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
 
-          <!-- Dosage Form & Category Select -->
+          <!-- Form (dosage form) & Type (medical use) -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form Type *</label>
-              <select id="med-form-type" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
-                <option value="Tablet">Tablet / Capsule</option>
-                <option value="Syrup">Syrup / Suspension</option>
-                <option value="Injection">Injection / Vial</option>
-                <option value="Suspension">Suspension</option>
+              <label for="med-form-type" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form *</label>
+              <select id="med-form-type" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
+                <option value="Tablet">Tablet</option>
                 <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Injection">Injection</option>
+                <option value="Drops">Drops</option>
                 <option value="Cream">Cream</option>
                 <option value="Gel">Gel</option>
                 <option value="Ointment">Ointment</option>
@@ -220,42 +202,22 @@
                 <option value="Sachet">Sachet</option>
                 <option value="Powder">Powder</option>
                 <option value="Inhaler">Inhaler</option>
-                <option value="Drops">Eye/Ear Drops</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category / Tag</label>
-              <select id="med-category-select" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="TAB">Tablets</option>
-                <option value="SYRUP">Syrups</option>
-                <option value="IV">IV</option>
-                <option value="Suspension">Suspension</option>
-                <option value="Capsule">Capsule</option>
-                <option value="Cream">Cream</option>
-                <option value="Gel">Gel</option>
-                <option value="Ointment">Ointment</option>
-                <option value="Liquid">Liquid</option>
-                <option value="Sachet">Sachet</option>
-                <option value="Powder">Powder</option>
-                <option value="Inhaler">Inhaler</option>
-                <option value="Painkiller">Painkiller</option>
-                <option value="Antibiotic">Antibiotic</option>
-                <option value="Cough & Cold">Cough & Cold</option>
-                <option value="Vitamins">Vitamins</option>
-                <option value="Cardiovascular">Cardiovascular</option>
-                <option value="Diabetes">Diabetes</option>
-                <option value="Daily Dose">Daily Dose</option>
-                <option value="First Aid">First Aid</option>
-                <option value="Gastro">Gastro</option>
-                <option value="Other">Other (Custom)</option>
+              <label for="med-category-select" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Type *</label>
+              <select id="med-category-select" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="Other">Other</option>
               </select>
             </div>
           </div>
 
           <div id="custom-cat-container" class="hidden">
-            <input type="text" id="med-category-custom" placeholder="Custom Category Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label for="med-category-custom" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">New type name</label>
+            <input type="text" id="med-category-custom" maxlength="40" placeholder="e.g. Thyroid, Hormones" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
+          <p id="type-error" class="mp-inline-error" role="alert"></p>
 
           <!-- Price in PKR -->
           <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm overflow-hidden">
@@ -590,7 +552,7 @@
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
             <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
-            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Types</span>
           </div>
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <div class="flex justify-between items-center">
@@ -1023,6 +985,19 @@
       </div>
     </div>
 
+    <!-- Card 3-dot menu (one shared menu, placed next to the tapped card) -->
+    <div id="card-menu" class="hidden mp-card-menu" role="menu" data-id="">
+      <button type="button" role="menuitem" data-action="openDetailsModal" data-id="" class="mp-menu-item">
+        <i data-lucide="eye" class="w-4 h-4"></i><span>View details</span>
+      </button>
+      <button type="button" role="menuitem" data-action="editMedicine" data-id="" class="mp-menu-item">
+        <i data-lucide="edit" class="w-4 h-4"></i><span>Edit</span>
+      </button>
+      <button type="button" role="menuitem" data-action="deleteMedicine" data-id="" class="mp-menu-item mp-menu-danger">
+        <i data-lucide="trash-2" class="w-4 h-4"></i><span>Delete</span>
+      </button>
+    </div>
+
     <!-- Notification Toast Message -->
     <div id="toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-medium shadow-xl z-50 transition-all duration-300 flex items-center space-x-2">
       <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
@@ -1034,6 +1009,7 @@
   <!-- Scripts: plain (non-module) files, order matters -->
   <script src="js/vendor/lucide.min.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/types.js"></script>
   <script src="js/medicines.js"></script>
   <script src="js/stock.js"></script>
   <script src="js/sales.js"></script>

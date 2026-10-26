@@ -10,10 +10,6 @@ let purchases = [];
 let listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
 let currentImageData = '';
 let activeTab = 'home';
-let isBulkSelectMode = false;
-let selectedMedIds = new Set();
-// Medicine cards currently shown in the list (bulk select works only on these)
-let visibleMedIds = new Set();
 let currentSellMed = null;
 let currentRestockMed = null;
 let tabBeforeAdd = 'home';
@@ -35,7 +31,11 @@ const STORAGE_KEYS = {
   activeTab: 'mediprice_active_tab',
   // New in v1.1
   purchases: 'medstore_purchases_db',
-  listFilters: 'medstore_list_filters'
+  listFilters: 'medstore_list_filters',
+  // New in v1.2
+  customTypes: 'medstore_custom_types',
+  formTypeMigrated: 'medstore_migrated_form_type_v1',
+  preFormTypeBackup: 'medstore_backup_before_form_type'
 };
 
 function saveToLocalStorage() {
@@ -87,6 +87,7 @@ function loadLocalStorage() {
   }
 
   normalizeMedicines(medicines);
+  migrateFormTypeOnce(shouldRegenerate);
 
   // Load sales BEFORE deduplication: removeDuplicateMedicines() saves to
   // localStorage, and saving an empty salesHistory used to wipe the sales.
@@ -206,4 +207,60 @@ function readListFilters() {
 
 function writeListFilters(filters) {
   try { localStorage.setItem(STORAGE_KEYS.listFilters, JSON.stringify(filters)); } catch (e) {}
+}
+
+// ---------- v1.2: separate Form and Type ----------
+// Old data stored a form name (TAB, SYRUP, IV, Cream...) as the category.
+// Runs once: copies the raw saved medicines to a backup key, moves form names
+// into Form, guesses Type from the name, then saves a flag. Later starts only
+// fix letter case.
+function migrateFormTypeOnce(isFreshInstall) {
+  const customs = getCustomTypes();
+  let done = false;
+  try { done = !!localStorage.getItem(STORAGE_KEYS.formTypeMigrated); } catch (e) {}
+
+  if (done) {
+    medicines.forEach(m => canonicalizeFormAndType(m, customs));
+    saveCustomTypes(customs);
+    return;
+  }
+
+  if (!isFreshInstall) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.medicines);
+      if (raw && !localStorage.getItem(STORAGE_KEYS.preFormTypeBackup)) {
+        localStorage.setItem(STORAGE_KEYS.preFormTypeBackup, raw);
+      }
+    } catch (e) {
+      // No room for the backup: leave the data as it is and try again next start
+      showToast('Storage full: Form/Type update skipped. Export a backup and free space.');
+      return;
+    }
+  }
+
+  medicines.forEach(m => migrateFormAndType(m, customs));
+  saveCustomTypes(customs);
+  markFormTypeMigrated();
+}
+
+function markFormTypeMigrated() {
+  try { localStorage.setItem(STORAGE_KEYS.formTypeMigrated, new Date().toISOString()); } catch (e) {}
+}
+
+// Same value in any letter case counts as one: "SYRUP" / "syrup" -> "Syrup"
+function canonicalizeFormAndType(med, customs) {
+  const form = canonicalForm(med.formType);
+  if (form) med.formType = form;
+  if (!med.formType) med.formType = 'Tablet';
+  const type = canonicalType(med.category, customs);
+  med.category = type || 'Other';
+  if (!TYPES.includes(med.category) && !customs.some(t => textKey(t) === textKey(med.category))) customs.push(med.category);
+}
+
+function saveCustomTypes(list) {
+  const clean = [];
+  list.forEach(t => {
+    if (t && !TYPES.includes(t) && !clean.some(c => textKey(c) === textKey(t))) clean.push(t);
+  });
+  try { localStorage.setItem(STORAGE_KEYS.customTypes, JSON.stringify(clean)); } catch (e) {}
 }

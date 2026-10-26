@@ -45,7 +45,7 @@ function updateStatsScreen() {
   document.getElementById('stat-today-sales-count').textContent = `Today: ${todaySales.length} orders`;
 
   document.getElementById('stat-total-meds').textContent = totalMeds.toLocaleString();
-  document.getElementById('stat-total-categories').textContent = `${categories} Categories`;
+  document.getElementById('stat-total-categories').textContent = `${categories} Types`;
 
   const counts = getStockCounts();
   document.getElementById('stat-stock-value').textContent = `Rs. ${counts.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

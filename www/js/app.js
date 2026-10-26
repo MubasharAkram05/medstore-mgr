@@ -7,9 +7,6 @@ const CLICK_ACTIONS = {
   switchTab: el => switchTab(el.dataset.tab),
   cancelForm: () => { resetForm(); switchTab(tabBeforeAdd || 'home'); },
   clearSearch: () => clearSearch(),
-  toggleBulkSelectMode: () => toggleBulkSelectMode(),
-  deleteSelectedMedicines: () => deleteSelectedMedicines(),
-  exitBulkSelectMode: () => exitBulkSelectMode(),
   removeImage: () => removeImage(),
   resetCalculator: () => resetCalculator(),
   clearCalcSearch: () => clearCalcSearch(),
@@ -33,6 +30,8 @@ const CLICK_ACTIONS = {
   saveRestock: () => saveRestock(),
   deleteSale: el => deleteSale(el.dataset.id),
   editMedicine: el => editMedicine(el.dataset.id),
+  deleteMedicine: el => deleteMedicine(el.dataset.id),
+  openCardMenu: el => openCardMenu(el),
   openDetailsModal: el => openDetailsModal(el.dataset.id),
   openCardCalculator: el => openCardCalculator(el.dataset.id),
   selectCalcMedicine: el => selectCalcMedicine(el.dataset.id)
@@ -46,18 +45,18 @@ function on(id, event, handler) {
 function bindEvents() {
   document.addEventListener('click', e => {
     const el = e.target.closest('[data-action]');
+    // Any tap outside the card menu closes it (the menu button toggles it itself)
+    if (!el || el.dataset.action !== 'openCardMenu') closeCardMenu();
     if (!el) return;
     const action = CLICK_ACTIONS[el.dataset.action];
     if (action) action(el);
   });
 
-  // Bulk-select checkboxes on medicine cards
-  document.addEventListener('change', e => {
-    const el = e.target.closest('[data-action="toggleSelectMed"]');
-    if (el) toggleSelectMed(el.dataset.id, el.checked);
-  });
+  // Card menu: close on Escape or when the list scrolls
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCardMenu(); });
+  document.querySelector('main').addEventListener('scroll', closeCardMenuOnScroll, { passive: true });
 
-  // Home: search, filters, sort, bulk select
+  // Home: search, filters, sort
   on('search-input', 'input', handleSearchFilter);
   on('filter-category', 'change', e => setListFilter('category', e.target.value));
   on('filter-form', 'change', e => setListFilter('form', e.target.value));
@@ -136,6 +135,7 @@ window.addEventListener('load', () => {
   loadLocalStorage();
   loadUserProfile();
   populateEditMedicinePlaces('');
+  populateTypeSelect('Other');
   updateFormTypeLabels();
   renderListFilters();
   renderMedicineList();

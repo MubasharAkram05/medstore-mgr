@@ -98,8 +98,6 @@
 .mp-card-action-row { display:flex; justify-content:flex-end; margin:8px 0 2px; } .mp-calc-btn-compact { min-height:34px; padding:0 12px; border-radius:11px; } .mp-tabs-pill, .mp-price-row, .mp-card-footer { display:none !important; }
 .mp-sell-btn { margin-top:7px; width:100%; border:0; border-radius:11px; background:#059669; color:#fff; padding:7px 8px; font-size:9px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow:0 4px 10px rgba(5,150,105,.18); }
 .mp-sell-btn:active { background:#047857; }
-.mp-select-wrap { position:absolute; top:8px; left:8px; z-index:5; }
-.mp-card-selected { border-color:#10b981; box-shadow:0 0 0 2px rgba(16,185,129,.15),0 10px 24px rgba(5,150,105,.10); }
 @media (max-width:360px) {
   #medicine-list { gap:8px !important; }
   .mp-medicine-card { padding:8px; border-radius:18px; }
@@ -341,3 +339,21 @@ textarea.mp-qty-input { min-height:64px; resize:vertical; }
 @media (hover:none) and (pointer:coarse) {
   body.mp-typing #app-container > nav { display:none; }
 }
+
+/* ===================== v1.2: card menu ===================== */
+/* Card top: form tag always shown in full; 44px tap area for the 3-dot button */
+.mp-card-top { gap:4px; }
+.mp-form-badge { flex:0 1 auto; min-width:0; max-width:calc(100% - 40px); overflow:hidden; text-overflow:ellipsis; position:relative; z-index:1; }
+.mp-more { position:relative; z-index:2; width:44px; height:44px; margin:-10px -10px -10px auto; display:flex; align-items:center; justify-content:center; border-radius:12px; }
+.mp-more:hover, .mp-more:focus-visible { background:#f1f5f9; }
+
+.mp-card-menu {
+  position:fixed; z-index:45; min-width:176px; padding:6px; border-radius:16px; background:#fff;
+  border:1px solid #e2e8f0; box-shadow:0 18px 40px rgba(15,23,42,.18); animation:mpMenuIn .14s ease-out;
+}
+.mp-card-menu.hidden { display:none; }
+@keyframes mpMenuIn { from { opacity:0; transform:translateY(-4px) scale(.98); } to { opacity:1; transform:none; } }
+.mp-menu-item { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:0 12px; border-radius:11px; font-size:14px; font-weight:700; color:#334155; text-align:left; }
+.mp-menu-item:hover, .mp-menu-item:focus-visible { background:#f1f5f9; outline:none; }
+.mp-menu-danger { color:#dc2626; }
+.mp-menu-danger:hover, .mp-menu-danger:focus-visible { background:#fef2f2; }
