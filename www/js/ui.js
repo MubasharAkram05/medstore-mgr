@@ -509,9 +509,6 @@ function updateProfilePreview() {
 
   if (userProfile.avatar) {
     document.getElementById('profile-avatar-preview').src = userProfile.avatar;
-    document.getElementById('header-avatar-img').src = userProfile.avatar;
-    document.getElementById('header-avatar-img').classList.remove('hidden');
-    document.getElementById('header-avatar-icon').classList.add('hidden');
   }
 }
 

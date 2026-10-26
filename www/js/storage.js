@@ -44,8 +44,25 @@ const STORAGE_KEYS = {
   listView: 'medstore_list_view',
   // New in v1.4
   singleItemsMigrated: 'medstore_migrated_single_items_v1',
-  preSingleItemsBackup: 'medstore_backup_before_single_items'
+  preSingleItemsBackup: 'medstore_backup_before_single_items',
+  // New in v1.5
+  cart: 'medstore_cart'
 };
+
+// Cart lines survive closing the app. Cleared only by Complete Sale / Clear Cart.
+function readCart() {
+  const list = readJsonArray(STORAGE_KEYS.cart);
+  return list.filter(l => l && l.medId && Number(l.qty) > 0 && (l.unit === 'pack' || l.unit === 'loose'))
+    .map(l => ({ ...l, qty: Number(l.qty), price: Number(l.price) || 0 }));
+}
+
+function writeCart(list) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(list));
+  } catch (e) {
+    showToast('Storage full! Cart could not be saved.');
+  }
+}
 
 function saveToLocalStorage() {
   try {

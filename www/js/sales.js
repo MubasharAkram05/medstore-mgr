@@ -59,45 +59,20 @@ function calcSellTotal() {
 
 // Records one sale and takes it out of stock.
 // Returns an error message (sale blocked) or '' when saved.
-function recordSale(med, packs, units) {
-  if (packs < 0 || units < 0) return 'Quantity can\'t be negative.';
-  if (packs <= 0 && units <= 0) return 'Please enter a valid quantity!';
-
-  const check = checkStockForSale(med, packs, units);
-  if (check.error) return check.error;
-
-  const totalRevenue = (packs * med.pataPrice) + (units * med.tabletPrice);
-  const saleRecord = {
-    id: 'sale_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-    medId: med.id,
-    medName: med.name,
-    formType: med.formType || 'Tablet',
-    packs: packs,
-    units: units,
-    // Units taken out of stock by this sale (0 when stock was not set).
-    // Deleting the sale puts exactly this amount back.
-    stockUnits: check.units,
-    revenue: totalRevenue,
-    date: new Date().toISOString()
-  };
-
-  if (hasStock(med)) med.stockUnits = Number(med.stockUnits) - check.units;
-  salesHistory.unshift(saleRecord);
-  saveToLocalStorage();
-  renderMedicineList();
-  showToast(`Sale recorded! Revenue: Rs. ${totalRevenue.toFixed(2)}`);
-  return '';
-}
-
+// "Confirm" only adds the item to the cart. Stock and sales change on Complete Sale (cart.js).
 function confirmRecordSale() {
   if (!currentSellMed) return;
 
   const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
   const units = sellLooseQty(currentSellMed);
 
-  const error = recordSale(currentSellMed, packs, units);
+  const error = addToCart(currentSellMed, packs, units);
   document.getElementById('sell-error').textContent = error;
-  if (!error) closeSellModal();
+  if (error) return;
+  document.getElementById('sell-pack-qty').value = 1;
+  document.getElementById('sell-unit-qty').value = 0;
+  closeSellModal();
+  showToast('Added to cart');
 }
 
 // Render Sales History & Analytics
@@ -130,7 +105,7 @@ function renderSalesHistory() {
       <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
         <div class="min-w-0">
           <h5 class="font-bold text-slate-800 truncate">${escapeHtml(s.medName)}</h5>
-          <p class="text-[10px] text-slate-400">${dateStr} • ${qtyText}</p>
+          <p class="text-[10px] text-slate-400">${dateStr} • ${qtyText}${s.billNo ? ` • Bill #${escapeHtml(String(s.billNo))}` : ''}</p>
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <span class="font-bold text-emerald-700">Rs. ${Number(s.revenue || 0).toFixed(2)}</span>
@@ -434,13 +409,15 @@ function recordSaleFromCalc() {
   const tabQty = isPackForm(med.formType) ? (parseFloat(document.getElementById('calc-tablet-qty').value) || 0) : 0;
 
   if (pataQty <= 0 && tabQty <= 0) {
-    showToast('Please enter quantities to record sale.');
+    showToast('Please enter a quantity first.');
     return;
   }
 
-  const error = recordSale(med, pataQty, tabQty);
+  const error = addToCart(med, pataQty, tabQty);
   document.getElementById('calc-sale-error').textContent = error;
-  if (!error) updateCalcDetails();
+  if (error) return;
+  resetCalculator();
+  showToast('Added to cart');
 }
 
 // Details popup "Calculator" button. selectCalcMedicine() works for any medicine;

@@ -39,7 +39,7 @@ body {
 }
 #app-container > header h1 { font-size: 20px !important; letter-spacing: -.02em !important; line-height: 1.2; }
 #app-container > header p { font-size: 12px !important; opacity: .9; margin-top: 0 !important; }
-#header-profile-btn {
+#header-cart-btn { position: relative;
   width: 44px; height: 44px;
   border-radius: var(--mp-radius-sm) !important;
   background: rgba(255, 255, 255, .14) !important;
