@@ -5,7 +5,7 @@
 // Buttons with data-action="..." (static HTML and rendered cards/lists)
 const CLICK_ACTIONS = {
   switchTab: el => switchTab(el.dataset.tab),
-  cancelForm: () => { resetForm(); switchTab('home'); },
+  cancelForm: () => { resetForm(); switchTab(tabBeforeAdd || 'home'); },
   clearSearch: () => clearSearch(),
   toggleBulkSelectMode: () => toggleBulkSelectMode(),
   deleteSelectedMedicines: () => deleteSelectedMedicines(),
@@ -25,8 +25,14 @@ const CLICK_ACTIONS = {
   confirmRecordSale: () => confirmRecordSale(),
   closeDetailsModal: () => closeDetailsModal(),
   // Rendered by JS
-  filterCategory: el => filterCategory(el.dataset.category),
-  filterFormType: el => filterFormType(el.dataset.form),
+  resetListFilters: () => resetListFilters(),
+  showLowStock: () => showLowStock(),
+  showLowStockFromStats: () => { switchTab('home'); showLowStock(); },
+  showOutOfStockFromStats: () => { switchTab('home'); setListFilter('stock', 'OUT'); renderListFilters(); },
+  closeRestockModal: () => closeRestockModal(),
+  saveRestock: () => saveRestock(),
+  deleteSale: el => deleteSale(el.dataset.id),
+  editMedicine: el => editMedicine(el.dataset.id),
   openDetailsModal: el => openDetailsModal(el.dataset.id),
   openCardCalculator: el => openCardCalculator(el.dataset.id),
   selectCalcMedicine: el => selectCalcMedicine(el.dataset.id)
@@ -51,10 +57,12 @@ function bindEvents() {
     if (el) toggleSelectMed(el.dataset.id, el.checked);
   });
 
-  // Home: search, sort, bulk select
+  // Home: search, filters, sort, bulk select
   on('search-input', 'input', handleSearchFilter);
+  on('filter-category', 'change', e => setListFilter('category', e.target.value));
+  on('filter-form', 'change', e => setListFilter('form', e.target.value));
+  on('filter-stock', 'change', e => setListFilter('stock', e.target.value));
   on('sort-select', 'change', handleSearchFilter);
-  on('select-all-check', 'change', e => toggleSelectAll(e.target.checked));
 
   // Add / edit form
   on('medicine-form', 'submit', saveMedicine);
@@ -66,6 +74,14 @@ function bindEvents() {
   on('med-strips-per-box', 'input', autoCalcBoxPricing);
   on('med-tablets-per-pata', 'input', () => { autoCalcUnitPrice(); autoCalcBoxPricing(); });
   on('med-pata-price', 'input', autoCalcUnitPrice);
+  // Stock fields + anything that changes the box/pack size
+  ['stock-boxes', 'stock-packs', 'stock-loose', 'min-stock-qty', 'min-stock-unit',
+   'med-tablets-per-pata', 'med-strips-per-box', 'med-total-tabs-box']
+    .forEach(id => on(id, 'input', updateStockPreview));
+  on('min-stock-unit', 'change', updateStockPreview);
+
+  // Restock form
+  ['restock-boxes', 'restock-packs', 'restock-loose'].forEach(id => on(id, 'input', updateRestockPreview));
 
   // Calculator
   on('calc-search-input', 'input', e => {
@@ -99,17 +115,29 @@ function bindEvents() {
   on('modal-calc-btn', 'click', () => { const id = currentDetailsMedicineId; closeDetailsModal(); openCalcModal(id); });
   on('modal-edit-btn', 'click', () => { const id = currentDetailsMedicineId; closeDetailsModal(); editMedicine(id); });
   on('modal-delete-btn', 'click', () => { const id = currentDetailsMedicineId; closeDetailsModal(); deleteMedicine(id); });
+  on('modal-restock-btn', 'click', () => { const id = currentDetailsMedicineId; closeDetailsModal(); openRestockModal(id); });
 
   // Backup
   on('import-file-input', 'change', importDataJSON);
+
+  // On phones the keyboard pushes the bottom nav up over the form buttons.
+  // While a text field is focused, hide the nav (CSS: body.mp-typing).
+  const isTyping = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=file]):not([type=date]), textarea');
+  document.addEventListener('focusin', e => { if (isTyping(e.target)) document.body.classList.add('mp-typing'); });
+  document.addEventListener('focusout', () => {
+    setTimeout(() => { if (!isTyping(document.activeElement)) document.body.classList.remove('mp-typing'); }, 50);
+  });
 }
 
 bindEvents();
 
 window.addEventListener('load', () => {
+  listFilters = readListFilters();
   loadLocalStorage();
   loadUserProfile();
-  renderCategoryPills();
+  populateEditMedicinePlaces('');
+  updateFormTypeLabels();
+  renderListFilters();
   renderMedicineList();
   populateCalcDropdown();
   updateStatsScreen();

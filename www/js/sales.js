@@ -7,22 +7,28 @@ function openSellModal(id) {
   if (!med) return;
 
   currentSellMed = med;
-  const formType = med.formType || 'Tablet';
-  const packLabel = formType === 'Tablet' ? 'Pata / Strips' : 'Bottles / Packs';
-  const unitLabel = formType === 'Tablet' ? 'Loose Tablets' : 'Loose Tablets';
+  const names = getUnitNames(med.formType);
 
   document.getElementById('sell-med-id').value = med.id;
   document.getElementById('sell-med-name').textContent = med.name;
-  document.getElementById('sell-med-stock-text').textContent = '';
+  renderSellStockText(med);
   document.getElementById('sell-med-img').src = med.image || placeholderImage(med.name.charAt(0));
 
-  document.getElementById('sell-pack-label').textContent = packLabel;
-  document.getElementById('sell-unit-label').textContent = unitLabel;
+  document.getElementById('sell-pack-label').textContent = capitalize(names.pack[1]);
+  document.getElementById('sell-unit-label').textContent = `Loose ${names.loose[1]}`;
   document.getElementById('sell-pack-qty').value = 1;
   document.getElementById('sell-unit-qty').value = 0;
+  document.getElementById('sell-error').textContent = '';
 
   calcSellTotal();
   document.getElementById('sell-modal').classList.remove('hidden');
+}
+
+function renderSellStockText(med) {
+  const el = document.getElementById('sell-med-stock-text');
+  const status = getStockStatus(med);
+  el.className = 'text-xs font-semibold ' + (status === 'out' ? 'text-red-600' : status === 'low' ? 'text-amber-600' : status === 'unset' ? 'text-slate-400' : 'text-emerald-700');
+  el.textContent = status === 'unset' ? 'Stock not set (sale won\'t change stock)' : `In stock: ${stockText(med)}`;
 }
 
 function closeSellModal() {
@@ -38,6 +44,41 @@ function calcSellTotal() {
 
   const totalBill = (packs * currentSellMed.pataPrice) + (units * currentSellMed.tabletPrice);
   document.getElementById('sell-total-bill').textContent = `Rs. ${totalBill.toFixed(2)}`;
+  // Live stock check while typing
+  const check = (packs < 0 || units < 0) ? { error: 'Quantity can\'t be negative.' } : checkStockForSale(currentSellMed, packs, units);
+  document.getElementById('sell-error').textContent = check.error || '';
+}
+
+// Records one sale and takes it out of stock.
+// Returns an error message (sale blocked) or '' when saved.
+function recordSale(med, packs, units) {
+  if (packs < 0 || units < 0) return 'Quantity can\'t be negative.';
+  if (packs <= 0 && units <= 0) return 'Please enter a valid quantity!';
+
+  const check = checkStockForSale(med, packs, units);
+  if (check.error) return check.error;
+
+  const totalRevenue = (packs * med.pataPrice) + (units * med.tabletPrice);
+  const saleRecord = {
+    id: 'sale_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    medId: med.id,
+    medName: med.name,
+    formType: med.formType || 'Tablet',
+    packs: packs,
+    units: units,
+    // Units taken out of stock by this sale (0 when stock was not set).
+    // Deleting the sale puts exactly this amount back.
+    stockUnits: check.units,
+    revenue: totalRevenue,
+    date: new Date().toISOString()
+  };
+
+  if (hasStock(med)) med.stockUnits = Number(med.stockUnits) - check.units;
+  salesHistory.unshift(saleRecord);
+  saveToLocalStorage();
+  renderMedicineList();
+  showToast(`Sale recorded! Revenue: Rs. ${totalRevenue.toFixed(2)}`);
+  return '';
 }
 
 function confirmRecordSale() {
@@ -46,29 +87,9 @@ function confirmRecordSale() {
   const packs = parseFloat(document.getElementById('sell-pack-qty').value) || 0;
   const units = parseFloat(document.getElementById('sell-unit-qty').value) || 0;
 
-  if (packs <= 0 && units <= 0) {
-    showToast('Please enter a valid quantity!');
-    return;
-  }
-
-  const totalRevenue = (packs * currentSellMed.pataPrice) + (units * currentSellMed.tabletPrice);
-
-  const saleRecord = {
-    id: 'sale_' + Date.now(),
-    medId: currentSellMed.id,
-    medName: currentSellMed.name,
-    formType: currentSellMed.formType || 'Tablet',
-    packs: packs,
-    units: units,
-    revenue: totalRevenue,
-    date: new Date().toISOString()
-  };
-
-  salesHistory.unshift(saleRecord);
-  saveToLocalStorage();
-  renderMedicineList();
-  closeSellModal();
-  showToast(`Sale recorded! Revenue: Rs. ${totalRevenue.toFixed(2)}`);
+  const error = recordSale(currentSellMed, packs, units);
+  document.getElementById('sell-error').textContent = error;
+  if (!error) closeSellModal();
 }
 
 // Render Sales History & Analytics
@@ -91,24 +112,47 @@ function renderSalesHistory() {
     const d = new Date(s.date);
     const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    let qtyText = '';
-    if (s.packs > 0) qtyText += `${s.packs} Pack/Pata `;
-    if (s.units > 0) qtyText += `${s.units} Units`;
+    const names = getUnitNames(s.formType);
+    const qtyParts = [];
+    if (s.packs > 0) qtyParts.push(`${s.packs} ${s.packs === 1 ? names.pack[0] : names.pack[1]}`);
+    if (s.units > 0) qtyParts.push(`${s.units} ${s.units === 1 ? names.loose[0] : names.loose[1]}`);
+    const qtyText = qtyParts.join(' + ');
 
     return `
       <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-        <div>
-          <h5 class="font-bold text-slate-800">${escapeHtml(s.medName)}</h5>
+        <div class="min-w-0">
+          <h5 class="font-bold text-slate-800 truncate">${escapeHtml(s.medName)}</h5>
           <p class="text-[10px] text-slate-400">${dateStr} • ${qtyText}</p>
         </div>
-        <div class="text-right">
-          <span class="font-bold text-emerald-700 block">Rs. ${s.revenue.toFixed(2)}</span>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="font-bold text-emerald-700">Rs. ${Number(s.revenue || 0).toFixed(2)}</span>
+          <button type="button" data-action="deleteSale" data-id="${escapeHtml(String(s.id))}" class="mp-icon-btn text-slate-400 hover:text-red-600 hover:bg-red-50" aria-label="Delete sale">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
     `;
   }).join('');
+  lucide.createIcons();
 }
 
+// Deletes one sale and puts its quantity back into stock
+function deleteSale(id) {
+  const sale = salesHistory.find(s => String(s.id) === String(id));
+  if (!sale) return;
+  if (!confirm(`Delete this sale of ${sale.medName}? Its quantity will be added back to stock.`)) return;
+
+  const med = medicines.find(m => m.id === sale.medId);
+  const restore = Number(sale.stockUnits) || 0;
+  if (med && hasStock(med) && restore > 0) med.stockUnits = Number(med.stockUnits) + restore;
+
+  salesHistory = salesHistory.filter(s => s !== sale);
+  saveToLocalStorage();
+  renderMedicineList();
+  showToast(restore > 0 && med ? `Sale deleted. ${formatMedUnits(med, restore)} back in stock.` : 'Sale deleted.');
+}
+
+// Clears the history only. Stock is NOT changed.
 function clearSalesHistoryConfirm() {
   if (confirm('Reset all recorded sales history? This action cannot be undone.')) {
     salesHistory = [];
@@ -302,6 +346,8 @@ function updateCalcDetails() {
   const formType = med.formType || 'Tablet';
   document.getElementById('calc-pata-label').textContent = formType === 'Tablet' ? 'Strips / Pata' : 'Pack / Bottle';
   document.getElementById('calc-tablet-label').textContent = formType === 'Tablet' ? 'Loose Tablets' : 'Loose Tablets';
+  const calcStock = document.getElementById('calc-stock-text');
+  if (calcStock) calcStock.textContent = `Stock: ${stockText(med)}`;
 
   calculateTotal();
 }
@@ -328,6 +374,9 @@ function calculateTotal() {
   document.getElementById('calc-total-result').textContent = `Rs. ${total.toFixed(2)}`;
   const breakdown=document.getElementById('calc-breakdown');
   if(breakdown) breakdown.textContent = `${pataQty} pata × Rs. ${pataRate.toFixed(2)} + ${tabQty} tablets × Rs. ${tabletRate.toFixed(2)}`;
+  // Live stock check for "Record as Completed Sale"
+  const saleError = document.getElementById('calc-sale-error');
+  if (saleError) saleError.textContent = (pataQty > 0 || tabQty > 0) ? checkStockForSale(med, pataQty, tabQty).error : '';
 }
 
 function recordSaleFromCalc() {
@@ -345,10 +394,9 @@ function recordSaleFromCalc() {
     return;
   }
 
-  currentSellMed = med;
-  document.getElementById('sell-pack-qty').value = pataQty;
-  document.getElementById('sell-unit-qty').value = tabQty;
-  confirmRecordSale();
+  const error = recordSale(med, pataQty, tabQty);
+  document.getElementById('calc-sale-error').textContent = error;
+  if (!error) updateCalcDetails();
 }
 
 // "Calculator" button on a medicine card

@@ -4,18 +4,28 @@
 function renderHomeDashboard() {
   const count = medicines.length;
   const categories = new Set(medicines.map(m => m.category || 'Other'));
-  const stock = medicines.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
-  const stockValue = medicines.reduce((sum, m) => {
-    const qty = Number(m.stock) || 0;
-    const price = Number(m.pataPrice) || 0;
-    return sum + (qty * price);
-  }, 0);
   const byId = (id) => document.getElementById(id);
   if (byId('dash-medicine-count')) byId('dash-medicine-count').textContent = count.toLocaleString();
   if (byId('dash-category-count')) byId('dash-category-count').textContent = categories.size.toLocaleString();
+  const counts = getStockCounts();
+  if (byId('dash-low-stock-count')) byId('dash-low-stock-count').textContent = (counts.low + counts.out).toLocaleString();
+  if (byId('dash-low-stock-detail')) byId('dash-low-stock-detail').textContent = `${counts.out} out of stock`;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   if (byId('home-greeting')) byId('home-greeting').textContent = greeting;
+}
+
+// Low / out-of-stock counts and total stock value (stock x unit price)
+function getStockCounts() {
+  let low = 0, out = 0, value = 0, tracked = 0;
+  medicines.forEach(m => {
+    const status = getStockStatus(m);
+    if (status !== 'unset') tracked++;
+    if (status === 'low') low++;
+    if (status === 'out') out++;
+    value += getStockValue(m);
+  });
+  return { low, out, value, tracked };
 }
 
 function updateStatsScreen() {
@@ -36,6 +46,12 @@ function updateStatsScreen() {
 
   document.getElementById('stat-total-meds').textContent = totalMeds.toLocaleString();
   document.getElementById('stat-total-categories').textContent = `${categories} Categories`;
+
+  const counts = getStockCounts();
+  document.getElementById('stat-stock-value').textContent = `Rs. ${counts.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById('stat-stock-tracked').textContent = `${counts.tracked.toLocaleString()} items with stock set`;
+  document.getElementById('stat-low-stock').textContent = counts.low.toLocaleString();
+  document.getElementById('stat-out-stock').textContent = counts.out.toLocaleString();
 
   renderSalesHistory();
 

@@ -9,7 +9,7 @@ function isNativeApp() {
 }
 
 function exportDataJSON() {
-  const json = JSON.stringify({ medicines, salesHistory, userProfile });
+  const json = JSON.stringify({ medicines, salesHistory, userProfile, purchases });
   const fileName = `medstore_backup_${Date.now()}.json`;
 
   if (isNativeApp()) {
@@ -54,12 +54,21 @@ function importDataJSON(e) {
     reader.onload = function(event) {
       try {
         const data = JSON.parse(event.target.result);
-        if (data.medicines) medicines = data.medicines;
-        if (data.salesHistory) salesHistory = data.salesHistory;
-        if (data.userProfile) userProfile = data.userProfile;
-        removeDuplicateMedicines(true);
+        if (!data || typeof data !== 'object') throw new Error('Not a backup');
+        if (Array.isArray(data.medicines)) medicines = data.medicines;
+        if (Array.isArray(data.salesHistory)) salesHistory = data.salesHistory;
+        // Backups made before v1.1 have no purchases: keep the current ones
+        if (Array.isArray(data.purchases)) purchases = data.purchases;
+        if (data.userProfile && typeof data.userProfile === 'object') {
+          userProfile = { ...userProfile, ...data.userProfile };
+          writeUserProfile(userProfile);
+          fillProfileInputs();
+        }
+        // Old backups: fill in the new stock fields without changing anything else
+        normalizeMedicines(medicines);
+        removeExactDuplicateMedicines();
         saveToLocalStorage();
-        renderCategoryPills();
+        renderListFilters();
         renderMedicineList();
         closeBackupModal();
         showToast('Backup restored successfully!');
@@ -69,4 +78,6 @@ function importDataJSON(e) {
     };
     reader.readAsText(file);
   }
+  // Allow picking the same file again later
+  e.target.value = '';
 }

@@ -50,62 +50,67 @@ function medicineAutoImage(med) {
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }
 
-// Category Pills + fast TAB/SYRUP/IV filters
-function renderFormQuickFilters() {
-  const container = document.getElementById('form-filter-row');
-  if (!container) return;
-  const forms = [
-    { key: 'ALL', label: 'ALL', icon: 'layers-3' },
-    { key: 'Tablet', label: 'TAB', icon: 'pill' },
-    { key: 'Syrup', label: 'SYRUP', icon: 'flask-conical' },
-    { key: 'Injection', label: 'IV', icon: 'syringe' },
-    { key: 'Suspension', label: 'Suspension', icon: 'beaker' },
-    { key: 'Capsule', label: 'Capsule', icon: 'pill' },
-    { key: 'Cream', label: 'Cream', icon: 'droplets' },
-    { key: 'Gel', label: 'Gel', icon: 'waves' },
-    { key: 'Ointment', label: 'Ointment', icon: 'hand' },
-    { key: 'Liquid', label: 'Liquid', icon: 'droplet' },
-    { key: 'Sachet', label: 'Sachet', icon: 'package' },
-    { key: 'Powder', label: 'Powder', icon: 'box' },
-    { key: 'Inhaler', label: 'Inhaler', icon: 'wind' }
-  ];
-  container.innerHTML = forms.map(f => {
-    const selected = f.key === 'ALL' ? selectedCategory === 'ALL' : selectedCategory === 'FORM:' + f.key;
-    const count = f.key === 'ALL'
-      ? medicines.length
-      : medicines.filter(m => (m.formType || 'Tablet') === f.key).length;
-    const active = selected ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50';
-    return `<button type="button" data-action="filterFormType" data-form="${f.key}"
-      class="flex-shrink-0 min-w-[78px] px-2.5 py-2 rounded-xl border ${active} transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95">
-      <span class="flex items-center gap-1 text-[10px] font-extrabold whitespace-nowrap"><i data-lucide="${f.icon}" class="w-3.5 h-3.5"></i>${f.label}</span>
-      <span class="text-[9px] opacity-75 font-semibold">${count.toLocaleString()}</span>
-    </button>`;
-  }).join('');
-  lucide.createIcons();
+// Home list filters: Category, Form Type and Stock dropdowns.
+// Options come from the medicines that are actually saved.
+function renderListFilters() {
+  const fill = (id, values, selected) => {
+    const select = document.getElementById(id);
+    if (!select) return selected;
+    const sorted = [...new Set(values)].sort((a, b) => a.localeCompare(b));
+    select.innerHTML = '<option value="ALL">All</option>' + sorted.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    // A saved filter whose value no longer exists falls back to "All"
+    const value = sorted.includes(selected) ? selected : 'ALL';
+    select.value = value;
+    return value;
+  };
+  listFilters.category = fill('filter-category', medicines.map(m => m.category || 'Other'), listFilters.category);
+  listFilters.form = fill('filter-form', medicines.map(m => m.formType || 'Tablet'), listFilters.form);
+  const stockSelect = document.getElementById('filter-stock');
+  if (stockSelect) {
+    if (!['ALL', 'LOW', 'OUT'].includes(listFilters.stock)) listFilters.stock = 'ALL';
+    stockSelect.value = listFilters.stock;
+  }
+  updateFilterHighlight();
 }
 
-function renderCategoryPills() {
-  const categories = ['ALL', ...new Set(medicines.map(m => m.category || 'Other'))];
-  const container = document.getElementById('category-pills');
-  container.innerHTML = categories.map(cat => {
-    const isSelected = selectedCategory === cat;
-    return `
-      <button data-action="filterCategory" data-category="${escapeHtml(cat)}" class="flex-shrink-0 min-w-[110px] min-h-[38px] px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition text-center ${isSelected ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'}">
-        ${escapeHtml(cat)}
-      </button>`;
-  }).join('');
-}
-
-function filterCategory(cat) {
-  selectedCategory = cat;
-  renderCategoryPills();
+function setListFilter(key, value) {
+  listFilters[key] = value;
+  writeListFilters(listFilters);
+  updateFilterHighlight();
   renderMedicineList();
 }
 
-function filterFormType(formType) {
-  selectedCategory = formType === 'ALL' ? 'ALL' : 'FORM:' + formType;
-  renderCategoryPills();
+function resetListFilters() {
+  listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
+  writeListFilters(listFilters);
+  renderListFilters();
   renderMedicineList();
+}
+
+// Dashboard "Low stock" tile
+function showLowStock() {
+  listFilters.stock = 'LOW';
+  writeListFilters(listFilters);
+  renderListFilters();
+  renderMedicineList();
+  document.getElementById('list-filters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateFilterHighlight() {
+  [['filter-category', 'category'], ['filter-form', 'form'], ['filter-stock', 'stock']].forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.closest('.mp-filter').classList.toggle('mp-filter-active', listFilters[key] !== 'ALL');
+  });
+  const reset = document.getElementById('reset-filters-btn');
+  if (reset) reset.classList.toggle('invisible', listFilters.category === 'ALL' && listFilters.form === 'ALL' && listFilters.stock === 'ALL');
+}
+
+function matchesStockFilter(med) {
+  if (listFilters.stock === 'ALL') return true;
+  const status = getStockStatus(med);
+  // "Low stock" also lists out-of-stock items (0 is below any minimum)
+  if (listFilters.stock === 'LOW') return status === 'low' || status === 'out';
+  return status === 'out';
 }
 
 function renderMedicineList() {
@@ -116,12 +121,10 @@ function renderMedicineList() {
   const sortVal = document.getElementById('sort-select').value;
 
   let filtered = medicines.filter(m => {
-    const matchesCategory =
-      selectedCategory === 'ALL' ||
-      (selectedCategory.startsWith('FORM:') && (m.formType || 'Tablet') === selectedCategory.slice(5)) ||
-      m.category === selectedCategory;
+    const matchesCategory = listFilters.category === 'ALL' || (m.category || 'Other') === listFilters.category;
+    const matchesForm = listFilters.form === 'ALL' || (m.formType || 'Tablet') === listFilters.form;
     const matchesSearch = !searchVal || m.name.toLowerCase().includes(searchVal) || (m.notes && m.notes.toLowerCase().includes(searchVal)) || (m.formType && m.formType.toLowerCase().includes(searchVal));
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesForm && matchesStockFilter(m) && matchesSearch;
   });
 
   // Sorting
@@ -137,23 +140,20 @@ function renderMedicineList() {
   if (filtered.length === 0) {
     listContainer.innerHTML = '';
     emptyState.classList.remove('hidden');
+    visibleMedIds = new Set();
+    pruneSelectionToVisible();
     return;
   } else {
     emptyState.classList.add('hidden');
   }
 
   const displayItems = filtered.slice(0, 100);
+  visibleMedIds = new Set(displayItems.map(m => m.id));
+  pruneSelectionToVisible();
 
   listContainer.innerHTML = displayItems.map(med => {
     const isSelected = selectedMedIds.has(med.id);
     const formType = med.formType || 'Tablet';
-    const packLabel = formType === 'Tablet' ? 'Pata' : formType === 'Syrup' ? 'Bottle' : 'Pack';
-    const unitLabel = 'Tablet';
-    const initials = escapeHtml((med.name || '?').trim().charAt(0).toUpperCase());
-    const tabs = Number(med.tabletsPerPata || med.tabletsPerPack || med.tabletsPerBox || 0);
-    const packPrice = Number(med.pataPrice || 0);
-    const tabletPrice = Number(med.tabletPrice || 0);
-    const boxPrice = Number(med.boxPrice || 0);
     const generic = med.notes ? String(med.notes).split(',')[0].trim() : (med.generic || 'Medicine');
 
     return `
@@ -181,6 +181,8 @@ function renderMedicineList() {
           <p class="mp-generic">${escapeHtml(generic || 'Medicine')}</p>
         </div>
 
+        ${cardStockHtml(med)}
+
         <div class="mp-card-actions">
           <button type="button" data-action="openCardCalculator" data-id="${med.id}" class="mp-calc-btn mp-calc-btn-compact">
             <i data-lucide="calculator" class="w-3.5 h-3.5"></i><span>Calculator</span>
@@ -201,8 +203,22 @@ function renderMedicineList() {
   lucide.createIcons();
 }
 
+function cardStockHtml(med) {
+  const status = getStockStatus(med);
+  if (status === 'unset') {
+    return `<button type="button" data-action="editMedicine" data-id="${med.id}" class="mp-card-stock mp-set-stock">
+      <i data-lucide="package-plus" class="w-3.5 h-3.5"></i><span>Set stock</span></button>`;
+  }
+  return `<div class="mp-card-stock mp-card-stock-${status}">
+    ${stockBadgeHtml(med)}
+    ${status === 'out' ? '' : `<span class="mp-stock-line">${escapeHtml(stockText(med))}</span>`}
+  </div>`;
+}
+
 // Navigation and Tab switching
 function switchTab(tab) {
+  // Remember where "Add" was opened from, so Save/Cancel can go back there
+  if (tab === 'add' && activeTab !== 'add') tabBeforeAdd = activeTab;
   activeTab = tab;
   saveActiveTab(tab);
   ['home', 'add', 'calc', 'stats', 'profile'].forEach(t => {
@@ -234,7 +250,8 @@ function openDetailsModal(id) {
   currentDetailsMedicineId = id;
 
   const formType = med.formType || 'Tablet';
-  const packLabel = formType === 'Tablet' ? 'Pata' : formType === 'Syrup' ? 'Bottle' : 'Pack';
+  const names = getUnitNames(formType);
+  const packLabel = capitalize(names.pack[0]);
 
   document.getElementById('modal-title').textContent = med.name;
   document.getElementById('modal-form-tag').textContent = formType;
@@ -249,9 +266,11 @@ function openDetailsModal(id) {
   document.getElementById('modal-total-tabs').textContent = totalTabs > 0 ? totalTabs.toLocaleString() : '—';
   document.getElementById('modal-total-tabs-detail').textContent = totalTabs > 0 ? 'Tablets in box' : 'Not added';
   document.getElementById('modal-pata-price').textContent = `Rs. ${Number(med.pataPrice || 0).toFixed(2)}`;
-  document.getElementById('modal-pata-count').textContent = `(${Number(med.tabletsPerPata || 0)} tablets / ${packLabel})`;
+  document.getElementById('modal-pata-count').textContent = `(${Number(med.tabletsPerPata || 0)} ${names.loose[1]} / ${packLabel})`;
   document.getElementById('modal-tablet-price').textContent = `Rs. ${Number(med.tabletPrice || 0).toFixed(2)}`;
   document.getElementById('modal-stock-text').textContent = '';
+  renderDetailsStock(med);
+  renderRestockHistory(med);
   const modalPlaceDisplay = document.getElementById('modal-place-display');
   if (modalPlaceDisplay) modalPlaceDisplay.textContent = med.place || 'Not assigned';
 
@@ -260,6 +279,18 @@ function openDetailsModal(id) {
 
   document.getElementById('details-modal').classList.remove('hidden');
   lucide.createIcons();
+}
+
+function renderDetailsStock(med) {
+  const status = getStockStatus(med);
+  const card = document.getElementById('modal-stock-card');
+  card.className = `mp-detail-stock mp-detail-stock-${status}`;
+  document.getElementById('modal-stock-badge').innerHTML = stockBadgeHtml(med);
+  document.getElementById('modal-stock-value').textContent = stockText(med);
+  const min = med.minStockUnits;
+  document.getElementById('modal-stock-min').textContent = status === 'unset'
+    ? 'Tap Edit or Restock to set stock'
+    : (min !== null && min !== undefined ? `Minimum: ${formatMedUnits(med, min)}` : 'No minimum set');
 }
 
 function closeDetailsModal() {
@@ -281,18 +312,33 @@ function clearSearch() {
   renderMedicineList();
 }
 
+let toastTimer = null;
 function showToast(msg) {
   const toast = document.getElementById('toast');
   document.getElementById('toast-message').textContent = msg;
   toast.classList.remove('hidden');
-  setTimeout(() => {
+  // Restart the timer so a new toast is not hidden early by the previous one
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
     toast.classList.add('hidden');
   }, 2500);
 }
 
 function loadUserProfile() {
   const storedProfile = readStoredUserProfile();
-  if (storedProfile) userProfile = storedProfile;
+  if (storedProfile) userProfile = { ...userProfile, ...storedProfile };
+  fillProfileInputs();
+}
+
+// Put the saved profile into the inputs. Before, the inputs kept their HTML
+// defaults after a reload, so the saved name/store never showed (and the next
+// "Save Info" wrote the defaults back).
+function fillProfileInputs() {
+  const set = (id, value) => { const el = document.getElementById(id); if (el && value !== undefined) el.value = value; };
+  set('input-user-name', userProfile.name);
+  set('input-store-name', userProfile.store);
+  set('input-user-location', userProfile.location);
+  set('input-user-phone', userProfile.phone);
   updateProfilePreview();
 }
 
@@ -327,11 +373,9 @@ function updateProfilePreview() {
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      userProfile.avatar = event.target.result;
+    readImageAsSmallDataUrl(file, 300, dataUrl => {
+      userProfile.avatar = dataUrl;
       saveUserProfile();
-    };
-    reader.readAsDataURL(file);
+    });
   }
 }

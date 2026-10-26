@@ -5,12 +5,18 @@
 // Global State
 let medicines = [];
 let salesHistory = [];
-let selectedCategory = 'ALL';
+let purchases = [];
+// Home list filters (saved under STORAGE_KEYS.listFilters)
+let listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
 let currentImageData = '';
 let activeTab = 'home';
 let isBulkSelectMode = false;
 let selectedMedIds = new Set();
+// Medicine cards currently shown in the list (bulk select works only on these)
+let visibleMedIds = new Set();
 let currentSellMed = null;
+let currentRestockMed = null;
+let tabBeforeAdd = 'home';
 let userProfile = {
   name: 'Pharmacy Admin',
   store: 'MedStoreMgr',
@@ -26,12 +32,22 @@ const STORAGE_KEYS = {
   medicines: 'mediprice_pkr_db',
   sales: 'mediprice_sales_db',
   profile: 'mediprice_user_profile',
-  activeTab: 'mediprice_active_tab'
+  activeTab: 'mediprice_active_tab',
+  // New in v1.1
+  purchases: 'medstore_purchases_db',
+  listFilters: 'medstore_list_filters'
 };
 
 function saveToLocalStorage() {
-  localStorage.setItem(STORAGE_KEYS.medicines, JSON.stringify(medicines));
-  localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(salesHistory));
+  try {
+    localStorage.setItem(STORAGE_KEYS.medicines, JSON.stringify(medicines));
+    localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(salesHistory));
+    localStorage.setItem(STORAGE_KEYS.purchases, JSON.stringify(purchases));
+  } catch (e) {
+    // Usually QuotaExceededError (too many large photos). Data stays in memory
+    // for this session, so tell the user to back up and free space.
+    showToast('Storage full! Export a backup and remove some photos.');
+  }
   updateStatsScreen();
   populateCalcDropdown();
   calculateStorageUsage();
@@ -70,9 +86,34 @@ function loadLocalStorage() {
     });
   }
 
-  // Normalize legacy category names so the new quick filters work.
-  // Also ensure every medicine has complete box pricing + total tablets data.
-  medicines.forEach(m => {
+  normalizeMedicines(medicines);
+
+  // Load sales BEFORE deduplication: removeDuplicateMedicines() saves to
+  // localStorage, and saving an empty salesHistory used to wipe the sales.
+  const storedSales = localStorage.getItem(STORAGE_KEYS.sales);
+  if (storedSales) {
+    try {
+      salesHistory = JSON.parse(storedSales);
+    } catch (e) {
+      salesHistory = [];
+    }
+  } else {
+    salesHistory = [];
+  }
+  if (!Array.isArray(salesHistory)) salesHistory = [];
+
+  purchases = readJsonArray(STORAGE_KEYS.purchases);
+
+  // Remove exact duplicate names only. (A brand-level dedupe here used to delete
+  // strength variants like "Augmentin 375mg" / "Augmentin 625mg" on every start.)
+  removeExactDuplicateMedicines();
+
+  saveToLocalStorage();
+}
+
+// Fills missing fields on old / imported records without removing anything.
+function normalizeMedicines(list) {
+  list.forEach(m => {
     if (m.category === 'Tablets') m.category = 'TAB';
     if (m.category === 'Syrups') m.category = 'SYRUP';
     if (m.formType === 'Injection' && !m.category) m.category = 'IV';
@@ -90,25 +131,18 @@ function loadLocalStorage() {
     if (!Number(m.tabletPrice || 0) && totalTabsBox > 0 && boxPrice > 0) {
       m.tabletPrice = parseFloat((boxPrice / totalTabsBox).toFixed(2));
     }
-  });
 
-  // Load sales BEFORE deduplication: removeDuplicateMedicines() saves to
-  // localStorage, and saving an empty salesHistory used to wipe the sales.
-  const storedSales = localStorage.getItem(STORAGE_KEYS.sales);
-  if (storedSales) {
-    try {
-      salesHistory = JSON.parse(storedSales);
-    } catch (e) {
-      salesHistory = [];
+    // v1.1 stock fields. stockUnits = stock in the smallest unit (tablet / unit),
+    // null means "Stock not set". The old 'stock' field (never editable in the UI,
+    // counted in patas by the old dashboard) is kept and converted once.
+    if (m.stockUnits === undefined) {
+      const old = Number(m.stock);
+      const hasOld = m.stock !== null && m.stock !== undefined && m.stock !== '' && Number.isFinite(old) && old >= 0;
+      m.stockUnits = hasOld ? Math.round(old * (Number(m.tabletsPerPata) || 1)) : null;
     }
-  } else {
-    salesHistory = [];
-  }
-
-  // Perform deduplication upon initial load
-  removeDuplicateMedicines(true);
-
-  saveToLocalStorage();
+    if (m.minStockUnits === undefined) m.minStockUnits = null;
+    if (m.place === undefined) m.place = '';
+  });
 }
 
 function calculateStorageUsage() {
@@ -150,4 +184,26 @@ function readActiveTab() {
 // Wipes every key this origin has saved (used by "Clear All Data")
 function clearAllStorage() {
   localStorage.clear();
+}
+
+function readJsonArray(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// Home list filters
+function readListFilters() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.listFilters) || 'null');
+    if (saved && typeof saved === 'object') return { category: 'ALL', form: 'ALL', stock: 'ALL', ...saved };
+  } catch (e) {}
+  return { category: 'ALL', form: 'ALL', stock: 'ALL' };
+}
+
+function writeListFilters(filters) {
+  try { localStorage.setItem(STORAGE_KEYS.listFilters, JSON.stringify(filters)); } catch (e) {}
 }

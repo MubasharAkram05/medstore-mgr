@@ -49,18 +49,20 @@
             <div class="mp-hero-glow mp-hero-glow-2"></div>
             <div class="mp-hero-copy">
               <span class="mp-eyebrow"><i data-lucide="activity" class="w-3.5 h-3.5"></i> PHARMACY OVERVIEW</span>
-              <h2>Good day, <span id="home-greeting">Pharmacy</span></h2>
+              <h2><span id="home-greeting">Good day</span></h2>
               <p>Manage medicines, prices and sales in one place.</p>
             </div>
             <div class="mp-hero-icon"><i data-lucide="pill" class="w-6 h-6"></i></div>
           </div>
-          <div class="mp-dashboard-strip">
-            <div class="mp-strip-icon"><i data-lucide="store" class="w-5 h-5"></i></div>
-            <div class="mp-strip-copy"><span>Total Medicines</span><strong id="dash-medicine-count">0</strong><small>in your pharmacy database</small></div>
-            <div class="mp-strip-art" aria-hidden="true">
-              <i data-lucide="pill" class="w-10 h-10"></i>
-              <i data-lucide="plus" class="w-6 h-6"></i>
+          <div class="mp-dash-row">
+            <div class="mp-dashboard-strip">
+              <div class="mp-strip-icon"><i data-lucide="store" class="w-5 h-5"></i></div>
+              <div class="mp-strip-copy"><span>Total Medicines</span><strong id="dash-medicine-count">0</strong><small>in your database</small></div>
             </div>
+            <button type="button" data-action="showLowStock" class="mp-dashboard-strip mp-low-tile" aria-label="Show low stock medicines">
+              <div class="mp-strip-icon"><i data-lucide="triangle-alert" class="w-5 h-5"></i></div>
+              <div class="mp-strip-copy"><span>Low Stock</span><strong id="dash-low-stock-count">0</strong><small id="dash-low-stock-detail">0 out of stock</small></div>
+            </button>
           </div>
         </div>
 
@@ -74,15 +76,30 @@
             </button>
           </div>
 
-          <!-- Category Pills -->
+          <!-- List Filters: Category / Form Type / Stock -->
           <div class="mp-section-head">
-            <div><i data-lucide="layout-grid" class="w-4 h-4"></i><span>Categories</span></div>
-            <span class="mp-section-hint">Swipe →</span>
+            <div><i data-lucide="list-filter" class="w-4 h-4"></i><span>Filters</span></div>
+            <button type="button" id="reset-filters-btn" data-action="resetListFilters" class="mp-reset-filters invisible">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i><span>Reset</span>
+            </button>
           </div>
-          <div class="flex items-center justify-between gap-2 pt-0.5">
-            <div class="flex gap-2 w-full py-1 overflow-x-auto no-scrollbar" id="category-pills">
-              <!-- Dynamically populated tags -->
-            </div>
+          <div id="list-filters" class="mp-filter-grid">
+            <label class="mp-filter">
+              <span>Category</span>
+              <select id="filter-category" aria-label="Filter by category"><option value="ALL">All</option></select>
+            </label>
+            <label class="mp-filter">
+              <span>Form Type</span>
+              <select id="filter-form" aria-label="Filter by form type"><option value="ALL">All</option></select>
+            </label>
+            <label class="mp-filter">
+              <span>Stock</span>
+              <select id="filter-stock" aria-label="Filter by stock">
+                <option value="ALL">All</option>
+                <option value="LOW">Low stock</option>
+                <option value="OUT">Out of stock</option>
+              </select>
+            </label>
           </div>
 
           <!-- Sort & Bulk Action Toolbar -->
@@ -108,16 +125,15 @@
 
           <!-- Bulk Selection Action Bar -->
           <div id="bulk-action-bar" class="hidden bg-slate-800 text-white rounded-xl p-2.5 flex items-center justify-between shadow-lg">
-            <div class="flex items-center space-x-2">
-              <input type="checkbox" id="select-all-check" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+            <div class="flex items-center space-x-2 pl-1">
               <span id="selected-count-text" class="text-xs font-semibold text-slate-200">0 selected</span>
             </div>
             <div class="flex items-center space-x-2">
-              <button data-action="deleteSelectedMedicines" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
+              <button data-action="deleteSelectedMedicines" class="min-h-[44px] bg-red-500 hover:bg-red-600 px-3 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 <span>Delete Selected</span>
               </button>
-              <button data-action="exitBulkSelectMode" class="bg-slate-700 hover:bg-slate-600 p-1 rounded-lg text-slate-300 hover:text-white">
+              <button data-action="exitBulkSelectMode" class="w-11 h-11 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white" aria-label="Exit select mode">
                 <i data-lucide="x" class="w-4 h-4"></i>
               </button>
             </div>
@@ -211,8 +227,8 @@
             <div>
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category / Tag</label>
               <select id="med-category-select" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="Tablets">Tablets</option>
-                <option value="Syrups">Syrups</option>
+                <option value="TAB">Tablets</option>
+                <option value="SYRUP">Syrups</option>
                 <option value="IV">IV</option>
                 <option value="Suspension">Suspension</option>
                 <option value="Capsule">Capsule</option>
@@ -274,15 +290,15 @@
                     </div>
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Tablets in Box</label>
+                    <label id="label-total-units" class="block text-[10px] font-bold text-slate-600 mb-1">Total Tabs in Box</label>
                     <input type="number" min="1" step="1" id="med-total-tabs-box" placeholder="e.g. 200" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Pata's</label>
+                    <label id="label-total-packs" class="block text-[10px] font-bold text-slate-600 mb-1">Total Patas in Box</label>
                     <input type="number" min="1" step="1" id="med-strips-per-box" placeholder="e.g. 10" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
                   </div>
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Tablets in 1 Pata</label>
+                    <label id="label-unit-count" class="block text-[10px] font-bold text-slate-600 mb-1">Tabs in 1 Pata</label>
                     <input type="number" min="1" step="1" id="med-tablets-per-pata" value="10" placeholder="10" class="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
                   </div>
                 </div>
@@ -311,6 +327,45 @@
             </div>
           </div>
 
+          <!-- Stock -->
+          <div id="stock-section" class="mp-stock-section">
+            <div class="flex items-center gap-2 mb-2.5">
+              <div class="mp-stock-section-icon"><i data-lucide="boxes" class="w-4 h-4"></i></div>
+              <div>
+                <p class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Stock</p>
+                <p class="text-[10px] text-slate-500">Quantity you have now. Sales subtract from it.</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label for="stock-boxes" class="mp-mini-label">Boxes</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="stock-boxes" placeholder="0" class="mp-qty-input">
+              </div>
+              <div>
+                <label for="stock-packs" id="label-stock-packs" class="mp-mini-label">Patas</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="stock-packs" placeholder="0" class="mp-qty-input">
+              </div>
+              <div>
+                <label for="stock-loose" id="label-stock-loose" class="mp-mini-label">Loose tabs</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="stock-loose" placeholder="0" class="mp-qty-input">
+              </div>
+            </div>
+            <p id="stock-total-preview" class="text-[10px] text-slate-500 mt-1.5"></p>
+
+            <div class="mt-3 pt-3 border-t border-slate-200/70">
+              <label for="min-stock-qty" class="mp-mini-label">Minimum stock (low stock alert)</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" inputmode="numeric" min="0" step="1" id="min-stock-qty" placeholder="e.g. 2" class="mp-qty-input">
+                <select id="min-stock-unit" aria-label="Minimum stock unit" class="mp-qty-input">
+                  <option value="box">Boxes</option>
+                  <option value="pack" selected>Patas</option>
+                  <option value="loose">Tabs</option>
+                </select>
+              </div>
+            </div>
+            <p id="stock-error" class="mp-inline-error" role="alert"></p>
+          </div>
+
           <!-- Medicine Storage Place -->
           <div class="bg-amber-50/70 rounded-2xl p-3 border border-amber-200">
             <div class="flex items-center gap-2 mb-2">
@@ -331,8 +386,8 @@
             <textarea id="med-notes" rows="2" placeholder="e.g. 500mg, 1 tsp twice daily after meals" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
           </div>
 
-          <!-- Form Submit Buttons -->
-          <div class="pt-2 flex space-x-2">
+          <!-- Form Submit Buttons (sticky, always above the bottom nav) -->
+          <div class="mp-form-footer flex space-x-2">
             <button type="button" data-action="cancelForm" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-sm hover:bg-slate-100 transition">
               Cancel
             </button>
@@ -443,6 +498,7 @@
               <h4 id="calc-name" class="font-bold text-slate-800 text-sm truncate">--</h4>
               <p id="calc-prices-text" class="text-xs text-slate-500">Pata: Rs. 0 | Tablet: Rs. 0</p>
               <p id="calc-pack-info" class="text-[10px] text-slate-400 mt-0.5">—</p>
+              <p id="calc-stock-text" class="text-[10px] font-bold text-emerald-700 mt-0.5"></p>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-3">
@@ -488,6 +544,7 @@
           </div>
           <div id="calc-breakdown" class="text-[10px] text-slate-400 text-center">0 pata + 0 tablets</div>
 
+          <p id="calc-sale-error" class="mp-inline-error text-center" role="alert"></p>
           <button data-action="recordSaleFromCalc" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1.5">
             <i data-lucide="shopping-cart" class="w-4 h-4"></i>
             <span>Record as Completed Sale</span>
@@ -528,11 +585,37 @@
           </div>
         </div>
 
-        <!-- Product Stats -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
-          <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
-          <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+        <!-- Product & Stock Stats -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+            <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
+            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Stock Value</span>
+              <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div id="stat-stock-value" class="text-lg font-bold text-emerald-700 mt-1 break-all">Rs. 0.00</div>
+            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-stock-tracked">0 items with stock set</span>
+          </div>
+          <button type="button" data-action="showLowStockFromStats" class="text-left bg-amber-50 p-3.5 rounded-2xl border border-amber-200 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center w-full">
+              <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Low Stock</span>
+              <i data-lucide="triangle-alert" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div id="stat-low-stock" class="text-xl font-bold text-amber-700 mt-1">0</div>
+            <span class="text-[10px] text-amber-700/80 mt-0.5">at or below minimum</span>
+          </button>
+          <button type="button" data-action="showOutOfStockFromStats" class="text-left bg-red-50 p-3.5 rounded-2xl border border-red-200 shadow-sm flex flex-col justify-between">
+            <div class="flex justify-between items-center w-full">
+              <span class="text-[10px] font-bold text-red-700 uppercase tracking-wider">Out of Stock</span>
+              <i data-lucide="package-x" class="w-4 h-4 text-red-600"></i>
+            </div>
+            <div id="stat-out-stock" class="text-xl font-bold text-red-700 mt-1">0</div>
+            <span class="text-[10px] text-red-700/80 mt-0.5">stock is 0</span>
+          </button>
         </div>
 
         <!-- Sales History List -->
@@ -680,137 +763,236 @@
     </nav>
 
     <!-- MODAL: QUICK SELL / RECORD SALE MODAL -->
-    <div id="sell-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-0 md:p-4">
-      <div class="bg-white w-full max-w-md rounded-t-3xl md:rounded-3xl p-5 space-y-4 shadow-xl">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+    <div id="sell-modal" class="hidden mp-modal-backdrop bg-slate-900/60 backdrop-blur-sm">
+      <div class="mp-sheet" role="dialog" aria-modal="true" aria-labelledby="sell-modal-title">
+        <div class="mp-sheet-header">
           <div class="flex items-center space-x-2">
             <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
               <i data-lucide="shopping-cart" class="w-5 h-5"></i>
             </div>
-            <h3 class="font-bold text-slate-800 text-base">Record Sale</h3>
+            <h3 id="sell-modal-title" class="font-bold text-slate-800 text-base">Record Sale</h3>
           </div>
-          <button data-action="closeSellModal" class="text-slate-400 hover:text-slate-600">
+          <button data-action="closeSellModal" class="mp-icon-btn text-slate-400 hover:text-slate-600" aria-label="Close">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <input type="hidden" id="sell-med-id">
+        <div class="mp-sheet-body space-y-4">
+          <input type="hidden" id="sell-med-id">
 
-        <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center space-x-3">
-          <img id="sell-med-img" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-200">
-          <div>
-            <h4 id="sell-med-name" class="font-bold text-slate-800 text-sm">--</h4>
-            <p id="sell-med-stock-text" class="text-xs text-emerald-700 font-semibold"></p>
+          <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center space-x-3">
+            <img id="sell-med-img" src="" alt="" class="w-12 h-12 rounded-xl object-cover bg-slate-200 shrink-0">
+            <div class="min-w-0">
+              <h4 id="sell-med-name" class="font-bold text-slate-800 text-sm truncate">--</h4>
+              <p id="sell-med-stock-text" class="text-xs text-emerald-700 font-semibold"></p>
+            </div>
           </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label id="sell-pack-label" for="sell-pack-qty" class="block text-xs font-semibold text-slate-600 mb-1">Patas</label>
+              <input type="number" inputmode="numeric" min="0" value="1" id="sell-pack-qty" class="mp-qty-input">
+            </div>
+            <div>
+              <label id="sell-unit-label" for="sell-unit-qty" class="block text-xs font-semibold text-slate-600 mb-1">Loose tabs</label>
+              <input type="number" inputmode="numeric" min="0" value="0" id="sell-unit-qty" class="mp-qty-input">
+            </div>
+          </div>
+
+          <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
+            <span class="text-xs text-emerald-800 font-bold">Total Bill (PKR):</span>
+            <span id="sell-total-bill" class="text-2xl font-black text-emerald-700">Rs. 0.00</span>
+          </div>
+          <p id="sell-error" class="mp-inline-error" role="alert"></p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label id="sell-pack-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Packs</label>
-            <input type="number" min="0" value="1" id="sell-pack-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          </div>
-          <div>
-            <label id="sell-unit-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
-            <input type="number" min="0" value="0" id="sell-unit-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          </div>
-        </div>
-
-        <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex justify-between items-center">
-          <span class="text-xs text-emerald-800 font-bold">Total Bill (PKR):</span>
-          <span id="sell-total-bill" class="text-2xl font-black text-emerald-700">Rs. 0.00</span>
-        </div>
-
-        <div class="flex space-x-2">
-          <button data-action="closeSellModal" class="w-1/3 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-semibold text-xs hover:bg-slate-100">
+        <!-- Sticky footer: always visible -->
+        <div class="mp-sheet-footer flex space-x-2">
+          <button data-action="closeSellModal" class="w-1/3 mp-btn border border-slate-300 text-slate-600 hover:bg-slate-100">
             Cancel
           </button>
-          <button data-action="confirmRecordSale" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center space-x-1">
+          <button data-action="confirmRecordSale" class="w-2/3 mp-btn bg-emerald-600 hover:bg-emerald-700 text-white shadow">
             <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-            <span>Confirm & Complete Sale</span>
+            <span>Confirm &amp; Complete Sale</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- MODAL: MEDICINE DETAILS MODAL -->
-    <div id="details-modal" class="hidden fixed inset-0 bg-slate-950/65 backdrop-blur-md z-50 flex justify-center items-end md:items-center p-0 md:p-4">
-      <div class="bg-white w-full max-w-md rounded-t-[30px] md:rounded-[30px] max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
-        <div class="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mt-2 md:hidden"></div>
-        <div class="p-4 sm:p-5 space-y-4">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center gap-1.5">
+    <div id="details-modal" class="hidden mp-modal-backdrop bg-slate-950/65 backdrop-blur-md">
+      <div class="mp-sheet mp-sheet-tall" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="mp-sheet-header">
+          <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
             <span id="modal-form-tag" class="px-2.5 py-1 bg-teal-50 text-teal-700 text-[10px] font-extrabold rounded-full uppercase tracking-wider border border-teal-100">Form</span>
             <span id="modal-category-tag" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider border border-emerald-100">Category</span>
           </div>
-          <button data-action="closeDetailsModal" class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+          <button data-action="closeDetailsModal" class="mp-icon-btn rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200" aria-label="Close">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <div class="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 p-4">
-          <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-100/50"></div>
-          <div class="relative text-center">
-            <div class="w-[104px] h-[104px] mx-auto rounded-[24px] p-1 bg-white shadow-lg border border-emerald-100">
-              <img id="modal-img" src="" class="w-full h-full object-cover rounded-[20px] bg-emerald-600">
+        <div class="mp-sheet-body space-y-4">
+          <div class="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 p-4">
+            <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-100/50"></div>
+            <div class="relative text-center">
+              <div class="w-[104px] h-[104px] mx-auto rounded-[24px] p-1 bg-white shadow-lg border border-emerald-100">
+                <img id="modal-img" src="" alt="" class="w-full h-full object-cover rounded-[20px] bg-emerald-600">
+              </div>
+              <h3 id="modal-title" class="text-[24px] leading-tight font-extrabold text-slate-800 mt-3">Medicine Name</h3>
+              <p id="modal-notes" class="text-[12px] leading-5 text-slate-500 mt-1 px-3 italic">No dosage or medicine notes attached.</p>
             </div>
-            <h3 id="modal-title" class="text-[24px] leading-tight font-extrabold text-slate-800 mt-3">Medicine Name</h3>
-            <p id="modal-notes" class="text-[12px] leading-5 text-slate-500 mt-1 px-3 italic">No dosage or medicine notes attached.</p>
           </div>
-        </div>
 
-        <div class="grid grid-cols-2 gap-2.5">
-          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="package" class="w-3.5 h-3.5"></i><span id="modal-box-title" class="text-[9px] uppercase tracking-wider font-extrabold">Full Box Price</span></div>
-            <span id="modal-box-price" class="text-[18px] leading-none font-extrabold text-emerald-600">Rs. —</span>
-            <span id="modal-box-detail" class="text-[10px] text-slate-400 block mt-1">Complete box</span>
-          </div>
-          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="pill" class="w-3.5 h-3.5"></i><span id="modal-total-tabs-title" class="text-[9px] uppercase tracking-wider font-extrabold">Total Tablets</span></div>
-            <span id="modal-total-tabs" class="text-[18px] leading-none font-extrabold text-teal-600">—</span>
-            <span id="modal-total-tabs-detail" class="text-[10px] text-slate-400 block mt-1">Tablets in box</span>
-          </div>
-          <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100 shadow-sm">
-            <div class="flex items-center gap-1.5 text-emerald-700 mb-1"><i data-lucide="layers-3" class="w-3.5 h-3.5"></i><span id="modal-pack-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Pata</span></div>
-            <span id="modal-pata-price" class="text-[18px] leading-none font-extrabold text-emerald-700">Rs. 0.00</span>
-            <span id="modal-pata-count" class="text-[10px] text-emerald-700/70 block mt-1">10 tablets</span>
-          </div>
-          <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm">
-            <div class="flex items-center gap-1.5 text-teal-700 mb-1"><i data-lucide="coins" class="w-3.5 h-3.5"></i><span id="modal-unit-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Tablet</span></div>
-            <span id="modal-tablet-price" class="text-[18px] leading-none font-extrabold text-teal-700">Rs. 0.00</span>
-            <span id="modal-stock-text" class="text-[10px] text-teal-700 font-bold block mt-1"></span>
-          </div>
-        </div>
-
-        <!-- Medicine Storage Place (display only) -->
-        <div class="w-fit max-w-[220px] p-3 bg-amber-50/70 rounded-2xl border border-amber-200 shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1.5 text-amber-700">
-              <i data-lucide="map-pin" class="w-4 h-4"></i>
-              <span class="text-[10px] uppercase tracking-wider font-extrabold">Place</span>
+          <!-- Stock -->
+          <div id="modal-stock-card" class="mp-detail-stock">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 text-slate-500"><i data-lucide="boxes" class="w-4 h-4"></i><span class="text-[10px] uppercase tracking-wider font-extrabold">Stock</span></div>
+              <div id="modal-stock-badge"></div>
             </div>
-            <span id="modal-place-display" class="px-3 py-1.5 bg-white rounded-xl border border-amber-200 text-sm font-extrabold text-slate-800 shadow-sm">—</span>
+            <p id="modal-stock-value" class="text-base font-extrabold text-slate-800 mt-1">Stock not set</p>
+            <p id="modal-stock-min" class="text-[10px] text-slate-500"></p>
           </div>
-          <p class="text-[9px] text-amber-700/70 mt-1.5 whitespace-nowrap">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="package" class="w-3.5 h-3.5"></i><span id="modal-box-title" class="text-[9px] uppercase tracking-wider font-extrabold">Full Box Price</span></div>
+              <span id="modal-box-price" class="text-[18px] leading-none font-extrabold text-emerald-600">Rs. —</span>
+              <span id="modal-box-detail" class="text-[10px] text-slate-400 block mt-1">Complete box</span>
+            </div>
+            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="pill" class="w-3.5 h-3.5"></i><span id="modal-total-tabs-title" class="text-[9px] uppercase tracking-wider font-extrabold">Total Tablets</span></div>
+              <span id="modal-total-tabs" class="text-[18px] leading-none font-extrabold text-teal-600">—</span>
+              <span id="modal-total-tabs-detail" class="text-[10px] text-slate-400 block mt-1">Tablets in box</span>
+            </div>
+            <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100 shadow-sm">
+              <div class="flex items-center gap-1.5 text-emerald-700 mb-1"><i data-lucide="layers-3" class="w-3.5 h-3.5"></i><span id="modal-pack-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Pata</span></div>
+              <span id="modal-pata-price" class="text-[18px] leading-none font-extrabold text-emerald-700">Rs. 0.00</span>
+              <span id="modal-pata-count" class="text-[10px] text-emerald-700/70 block mt-1">10 tablets</span>
+            </div>
+            <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm">
+              <div class="flex items-center gap-1.5 text-teal-700 mb-1"><i data-lucide="coins" class="w-3.5 h-3.5"></i><span id="modal-unit-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Tablet</span></div>
+              <span id="modal-tablet-price" class="text-[18px] leading-none font-extrabold text-teal-700">Rs. 0.00</span>
+              <span id="modal-stock-text" class="text-[10px] text-teal-700 font-bold block mt-1"></span>
+            </div>
+          </div>
+
+          <!-- Medicine Storage Place (display only) -->
+          <div class="w-fit max-w-full p-3 bg-amber-50/70 rounded-2xl border border-amber-200 shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1.5 text-amber-700">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                <span class="text-[10px] uppercase tracking-wider font-extrabold">Place</span>
+              </div>
+              <span id="modal-place-display" class="px-3 py-1.5 bg-white rounded-xl border border-amber-200 text-sm font-extrabold text-slate-800 shadow-sm">—</span>
+            </div>
+            <p class="text-[9px] text-amber-700/70 mt-1.5">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
+          </div>
+
+          <!-- Restock history -->
+          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-1.5 text-slate-500 mb-1.5"><i data-lucide="history" class="w-4 h-4"></i><span class="text-[10px] uppercase tracking-wider font-extrabold">Restock History</span></div>
+            <div id="modal-restock-history" class="space-y-1.5"></div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2.5 pt-1">
-          <button id="modal-sell-btn" class="py-3 bg-emerald-600 text-white font-extrabold rounded-2xl text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
-            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-            <span>Sell Now</span>
-          </button>
-          <button id="modal-calc-btn" class="py-3 bg-teal-600 text-white font-extrabold rounded-2xl text-sm hover:bg-teal-700 shadow-lg shadow-teal-600/20 flex items-center justify-center space-x-1.5 transition active:scale-[0.98]">
-            <i data-lucide="calculator" class="w-4 h-4"></i>
-            <span>Calculator</span>
-          </button>
-          <button id="modal-edit-btn" class="py-2.5 bg-slate-100 text-slate-700 font-bold rounded-2xl text-xs hover:bg-slate-200 border border-slate-200 flex items-center justify-center space-x-1.5 transition">
-            <i data-lucide="edit" class="w-4 h-4"></i>
-            <span>Edit</span>
-          </button>
-          <button id="modal-delete-btn" class="py-2.5 bg-red-50 text-red-600 border border-red-200 font-bold rounded-2xl text-xs hover:bg-red-100 flex items-center justify-center space-x-1.5 transition">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-            <span>Delete</span>
+        <!-- Sticky footer actions -->
+        <div class="mp-sheet-footer space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <button id="modal-sell-btn" class="mp-btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
+              <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+              <span>Sell Now</span>
+            </button>
+            <button id="modal-calc-btn" class="mp-btn bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-600/20">
+              <i data-lucide="calculator" class="w-4 h-4"></i>
+              <span>Calculator</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button id="modal-restock-btn" class="mp-btn mp-btn-sm bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100">
+              <i data-lucide="package-plus" class="w-4 h-4"></i>
+              <span>Restock</span>
+            </button>
+            <button id="modal-edit-btn" class="mp-btn mp-btn-sm bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">
+              <i data-lucide="edit" class="w-4 h-4"></i>
+              <span>Edit</span>
+            </button>
+            <button id="modal-delete-btn" class="mp-btn mp-btn-sm bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: RESTOCK / PURCHASE ENTRY -->
+    <div id="restock-modal" class="hidden mp-modal-backdrop bg-slate-900/60 backdrop-blur-sm">
+      <div class="mp-sheet" role="dialog" aria-modal="true" aria-labelledby="restock-modal-title">
+        <div class="mp-sheet-header">
+          <div class="flex items-center space-x-2 min-w-0">
+            <div class="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0">
+              <i data-lucide="package-plus" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 id="restock-modal-title" class="font-bold text-slate-800 text-base">Restock</h3>
+              <p id="restock-med-name" class="text-xs text-slate-500 truncate">--</p>
+            </div>
+          </div>
+          <button data-action="closeRestockModal" class="mp-icon-btn text-slate-400 hover:text-slate-600" aria-label="Close">
+            <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
+
+        <div class="mp-sheet-body space-y-3">
+          <p id="restock-current-stock" class="text-xs font-semibold text-emerald-700"></p>
+          <div>
+            <label for="restock-date" class="mp-mini-label">Date</label>
+            <input type="date" id="restock-date" class="mp-qty-input">
+          </div>
+          <div>
+            <span class="mp-mini-label">Quantity received</span>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label for="restock-boxes" class="text-[10px] text-slate-500">Boxes</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="restock-boxes" placeholder="0" class="mp-qty-input">
+              </div>
+              <div>
+                <label for="restock-packs" id="label-restock-packs" class="text-[10px] text-slate-500">Patas</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="restock-packs" placeholder="0" class="mp-qty-input">
+              </div>
+              <div>
+                <label for="restock-loose" id="label-restock-loose" class="text-[10px] text-slate-500">Loose tabs</label>
+                <input type="number" inputmode="numeric" min="0" step="1" id="restock-loose" placeholder="0" class="mp-qty-input">
+              </div>
+            </div>
+            <p id="restock-preview" class="text-[10px] text-slate-500 mt-1.5"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="restock-supplier" class="mp-mini-label">Supplier (optional)</label>
+              <input type="text" id="restock-supplier" placeholder="e.g. Ali Pharma" class="mp-qty-input">
+            </div>
+            <div>
+              <label for="restock-price-box" class="mp-mini-label">Price / box (optional)</label>
+              <input type="number" inputmode="decimal" min="0" step="0.01" id="restock-price-box" placeholder="Rs." class="mp-qty-input">
+            </div>
+          </div>
+          <div>
+            <label for="restock-notes" class="mp-mini-label">Notes</label>
+            <textarea id="restock-notes" rows="2" placeholder="Batch no, expiry, invoice..." class="mp-qty-input"></textarea>
+          </div>
+          <p id="restock-error" class="mp-inline-error" role="alert"></p>
+        </div>
+
+        <div class="mp-sheet-footer flex space-x-2">
+          <button data-action="closeRestockModal" class="w-1/3 mp-btn border border-slate-300 text-slate-600 hover:bg-slate-100">
+            Cancel
+          </button>
+          <button data-action="saveRestock" class="w-2/3 mp-btn bg-emerald-600 hover:bg-emerald-700 text-white shadow">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Save &amp; Add to Stock</span>
+          </button>
         </div>
       </div>
     </div>
@@ -853,6 +1035,7 @@
   <script src="js/vendor/lucide.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/medicines.js"></script>
+  <script src="js/stock.js"></script>
   <script src="js/sales.js"></script>
   <script src="js/reports.js"></script>
   <script src="js/backup.js"></script>

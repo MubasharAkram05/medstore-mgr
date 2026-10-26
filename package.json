@@ -1,6 +1,6 @@
 {
   "name": "medstore-mgr",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "private": true,
   "description": "MedStoreMgr - offline medical store sales and price tracker (Android app via Capacitor)",
   "scripts": {

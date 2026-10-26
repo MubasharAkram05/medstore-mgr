@@ -41,24 +41,6 @@
   box-shadow: 0 5px 18px rgba(15,23,42,.05) !important;
 }
 #search-input { background: rgba(255,255,255,.98) !important; height:52px !important; border:1px solid #dce9e5 !important; }
-#category-pills button, #form-filter-row button {
-  min-height: 36px;
-  border-radius: 999px !important;
-  padding-left: 13px !important;
-  padding-right: 13px !important;
-  font-weight: 700 !important;
-  white-space: nowrap;
-  border: 1px solid #e2e8f0;
-}
-#category-pills {
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-#category-pills::-webkit-scrollbar {
-  display: none;
-}
 
 /* List cards */
 #medicine-list { gap: 10px !important; }
@@ -174,7 +156,9 @@
   box-shadow: 0 25px 70px rgba(15,23,42,.25) !important;
   border: 1px solid rgba(226,232,240,.9);
 }
-#sell-modal > div, #details-modal > div { border-radius: 26px 26px 0 0 !important; }
+@media (max-width: 767px) {
+  #sell-modal > div, #details-modal > div, #restock-modal > div { border-radius: 26px 26px 0 0 !important; }
+}
 
 /* Better tap targets for icon-only controls */
 #clear-search, #clear-calc-search { width: 40px; height: 40px; display:flex; align-items:center; justify-content:center; }
@@ -208,22 +192,10 @@
 .mp-strip-copy span { display:block; font-size:9px; font-weight:700; color:#55706c; }
 .mp-strip-copy strong { display:block; margin-top:1px; font-size:20px; line-height:1; letter-spacing:-.03em; color:#075e54; }
 .mp-strip-copy small { display:block; margin-top:2px; font-size:7.5px; color:#7b9691; }
-.mp-strip-art { margin-left:auto; display:flex; align-items:center; gap:3px; padding-right:4px; color:#10a383; opacity:.42; }
-.mp-strip-art i:last-child { margin-left:-13px; margin-top:-22px; }
 .mp-section-head { display:flex; align-items:center; justify-content:space-between; padding:2px 2px 0; }
 .mp-section-head > div { display:flex; align-items:center; gap:6px; color:#163a36; font-size:14px; font-weight:850; }
 .mp-section-head > div i { color:#087f6d; }
 .mp-section-hint { font-size:8px; font-weight:700; color:#7b9691; }
-#category-pills { gap:8px !important; padding:6px 2px 7px !important; }
-#category-pills button {
-  min-height:42px !important; padding:0 14px !important; border-radius:14px !important;
-  background:rgba(255,255,255,.90) !important; border:1px solid #dcebe7 !important;
-  box-shadow:0 4px 12px rgba(15,23,42,.035); color:#35525d !important; font-size:10px !important;
-}
-#category-pills button.bg-emerald-600, #category-pills button.bg-emerald-500 {
-  background:linear-gradient(135deg,#059669,#0f8f7d) !important; color:#fff !important; border-color:#059669 !important;
-  box-shadow:0 7px 16px rgba(5,150,105,.18);
-}
 #medicine-list { gap:10px !important; padding-top:2px !important; }
 .mp-medicine-card {
   border-radius:21px !important; padding:9px !important;
@@ -240,7 +212,7 @@
 .mp-card-info h3 { font-size:12px; color:#162338; }
 .mp-generic { font-size:8.5px; margin-top:3px; color:#75828d; }
 .mp-card-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
-.mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { width:100%; min-height:34px; margin:0; border-radius:11px; justify-content:center; font-size:9px; font-weight:850; }
+.mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { width:100%; min-height:44px; margin:0; border-radius:11px; justify-content:center; font-size:9px; font-weight:850; }
 .mp-card-actions .mp-calc-btn { background:#e7faf3; border:1px solid #bcebd9; color:#087f6d; }
 .mp-card-actions .mp-sell-btn { background:linear-gradient(135deg,#059669,#0b9275); box-shadow:0 5px 12px rgba(5,150,105,.16); }
 .mp-card-actions .mp-calc-btn:active, .mp-card-actions .mp-sell-btn:active { transform:scale(.98); }
@@ -251,7 +223,7 @@
   .mp-strip-icon { width:34px; height:34px; flex-basis:34px; }
   .mp-strip-copy strong { font-size:18px; }
   .mp-product-image { height:78px !important; }
-  .mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { min-height:32px; font-size:8.5px; }
+  .mp-card-actions .mp-calc-btn, .mp-card-actions .mp-sell-btn { font-size:8.5px; }
 }
 
 /* Premium Add/Edit Medicine form */
@@ -273,7 +245,99 @@
 #screen-add .p-3.bg-emerald-50\/70 > div:first-child{padding-bottom:3px}
 #screen-add #med-tablet-price{min-height:38px;background:#f0fdf4}
 #screen-add textarea{min-height:76px;resize:vertical}
-#screen-add form>div:last-child{background:transparent;border:0;box-shadow:none;padding:0;position:sticky;bottom:8px;z-index:5}
-#screen-add form>div:last-child button{min-height:46px;border-radius:13px}
-#screen-add form>div:last-child button[type=submit]{box-shadow:0 8px 18px rgba(16,185,129,.22)}
+/* Sticky Save bar: sits above the bottom nav (before, bottom:8px put it behind the nav) */
+#screen-add form>div.mp-form-footer{background:rgba(245,248,247,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:0;border-radius:16px;box-shadow:0 -6px 18px rgba(15,23,42,.06);padding:8px;position:sticky;bottom:calc(var(--mp-nav-h) + 8px);z-index:15}
+body.mp-typing #screen-add form>div.mp-form-footer{bottom:8px}
+#screen-add form>div.mp-form-footer button{min-height:46px;border-radius:13px}
+#screen-add form>div.mp-form-footer button[type=submit]{box-shadow:0 8px 18px rgba(16,185,129,.22)}
 @media(max-width:380px){#screen-add .grid.grid-cols-2{gap:7px}#screen-add form>div{padding:11px}#screen-add #image-preview-container{width:76px;height:76px}}
+
+/* ===================== v1.1: stock, filters, sheets ===================== */
+
+/* Dashboard tiles: Total medicines + Low stock */
+.mp-dash-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
+.mp-dash-row .mp-dashboard-strip { margin-top:0; min-height:68px; padding:10px; gap:8px; }
+.mp-dash-row .mp-strip-icon { width:34px; height:34px; flex-basis:34px; }
+.mp-low-tile { text-align:left; width:100%; background:linear-gradient(100deg,#fff8eb,#fffdf7); border-color:#fde3b0; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; }
+.mp-low-tile:hover { box-shadow:0 10px 22px rgba(217,119,6,.12); }
+.mp-low-tile:active { transform:scale(.98); }
+.mp-low-tile .mp-strip-icon { color:#b45309; background:#fef0d2; }
+.mp-low-tile .mp-strip-copy span, .mp-low-tile .mp-strip-copy small { color:#92611c; }
+.mp-low-tile .mp-strip-copy strong { color:#b45309; }
+
+/* List filters */
+.mp-filter-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.mp-filter { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.mp-filter > span { font-size:10px; font-weight:800; color:#55706c; padding-left:2px; }
+.mp-filter select {
+  width:100%; min-height:44px; padding:0 26px 0 10px; border-radius:14px; border:1px solid #dcebe7;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  -webkit-appearance:none; appearance:none; color:#1f3b38; font-weight:700; font-size:14px !important;
+  text-overflow:ellipsis; box-shadow:0 4px 12px rgba(15,23,42,.035); transition:border-color .15s, box-shadow .15s;
+}
+.mp-filter-active select { border-color:#10b981; background-color:#ecfdf5; color:#047857; }
+.mp-reset-filters { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:0 10px; margin:-10px -6px -10px 0; font-size:11px; font-weight:800; color:#047857; border-radius:12px; }
+.mp-reset-filters:hover { background:#ecfdf5; }
+
+/* Stock on cards */
+.mp-card-stock { display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:6px; min-height:20px; }
+.mp-stock-line { font-size:9.5px; font-weight:700; color:#0f766e; line-height:1.3; }
+.mp-card-stock-low .mp-stock-line { color:#b45309; }
+.mp-set-stock { width:100%; min-height:44px; justify-content:center; border-radius:11px; border:1px dashed #cbd5e1; color:#64748b; font-size:9.5px; font-weight:800; background:#f8fafc; }
+.mp-set-stock:hover { border-color:#10b981; color:#047857; background:#ecfdf5; }
+.mp-stock-badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; font-size:9px; font-weight:850; line-height:1.2; white-space:nowrap; }
+.mp-stock-low { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.mp-stock-out { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
+
+/* Stock in details popup */
+.mp-detail-stock { padding:12px; border-radius:18px; border:1px solid #d1fae5; background:#f0fdf8; }
+.mp-detail-stock-low { border-color:#fcd34d; background:#fffbeb; }
+.mp-detail-stock-out { border-color:#fca5a5; background:#fef2f2; }
+.mp-detail-stock-out #modal-stock-value { color:#b91c1c; }
+.mp-detail-stock-unset { border-color:#e2e8f0; background:#f8fafc; }
+.mp-detail-stock-unset #modal-stock-value { color:#64748b; }
+.mp-history-row { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:12px; background:#f8fafc; border:1px solid #f1f5f9; }
+
+/* Stock fields in Add/Edit + shared form inputs */
+.mp-stock-section { background:linear-gradient(145deg,#f0fdfa,#ffffff) !important; border-color:#99f6e4 !important; }
+.mp-stock-section-icon { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#ccfbf1; color:#0f766e; }
+.mp-mini-label { display:block; font-size:10px; font-weight:800; color:#475569; margin-bottom:4px; }
+.mp-qty-input {
+  width:100%; min-height:44px; padding:8px 10px; border-radius:12px; border:1px solid #cbd5e1; background:#fff;
+  font-weight:700; color:#1e293b; outline:none; transition:border-color .15s, box-shadow .15s;
+}
+textarea.mp-qty-input { min-height:64px; resize:vertical; }
+.mp-qty-input:focus { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,.12); }
+.mp-qty-input:disabled { background:#f1f5f9; color:#94a3b8; }
+.mp-inline-error { color:#dc2626; font-size:12px; font-weight:700; line-height:1.35; margin-top:6px; }
+.mp-inline-error:empty { display:none; }
+
+/* Bottom-sheet popups: fit the screen, scroll inside, footer always visible */
+.mp-modal-backdrop { position:fixed; inset:0; z-index:50; display:flex; justify-content:center; align-items:flex-end; }
+.mp-modal-backdrop.hidden { display:none; }
+.mp-sheet {
+  width:100%; max-width:28rem; display:flex; flex-direction:column; background:#fff; overflow:hidden;
+  border-radius:26px 26px 0 0; border:1px solid rgba(226,232,240,.9); box-shadow:0 25px 70px rgba(15,23,42,.25);
+  max-height:calc(100vh - 12px); max-height:calc(100dvh - 12px - env(safe-area-inset-top, 0px));
+  animation:mpSheetUp .22s ease-out;
+}
+@keyframes mpSheetUp { from { transform:translateY(24px); opacity:.6; } to { transform:none; opacity:1; } }
+.mp-sheet-header { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 18px 10px; border-bottom:1px solid #f1f5f9; flex-shrink:0; }
+.mp-sheet-body { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:14px 18px; }
+.mp-sheet-footer {
+  flex-shrink:0; background:#fff; border-top:1px solid #f1f5f9; box-shadow:0 -8px 20px rgba(15,23,42,.05);
+  padding:12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.mp-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:48px; padding:0 12px; border-radius:14px; font-size:14px; font-weight:800; transition:background-color .15s, transform .1s; }
+.mp-btn:active { transform:scale(.98); }
+.mp-btn-sm { min-height:44px; font-size:12px; padding:0 6px; }
+.mp-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; flex-shrink:0; transition:background-color .15s, color .15s; }
+@media (min-width:768px) {
+  .mp-modal-backdrop { align-items:center; padding:16px; }
+  .mp-sheet { border-radius:26px; max-height:min(90vh, 760px); max-height:min(90dvh, 760px); }
+}
+
+/* Phones: hide the bottom nav while typing so the keyboard doesn't push it over the form */
+@media (hover:none) and (pointer:coarse) {
+  body.mp-typing #app-container > nav { display:none; }
+}
