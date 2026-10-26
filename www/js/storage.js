@@ -14,6 +14,8 @@ let currentImageData = '';
 let activeTab = 'home';
 let currentSellMed = null;
 let currentRestockMed = null;
+// Medicine picked in the Calculator (null = empty calculator)
+let calcSelectedId = null;
 let tabBeforeAdd = 'home';
 let userProfile = {
   name: 'Pharmacy Admin',
@@ -39,7 +41,10 @@ const STORAGE_KEYS = {
   formTypeMigrated: 'medstore_migrated_form_type_v1',
   preFormTypeBackup: 'medstore_backup_before_form_type',
   // New in v1.3
-  listView: 'medstore_list_view'
+  listView: 'medstore_list_view',
+  // New in v1.4
+  singleItemsMigrated: 'medstore_migrated_single_items_v1',
+  preSingleItemsBackup: 'medstore_backup_before_single_items'
 };
 
 function saveToLocalStorage() {
@@ -108,6 +113,9 @@ function loadLocalStorage() {
   if (!Array.isArray(salesHistory)) salesHistory = [];
 
   purchases = readJsonArray(STORAGE_KEYS.purchases);
+
+  // v1.4: syrups, creams, injections... count whole items (needs sales + purchases loaded)
+  migrateSingleItemsOnce(shouldRegenerate);
 
   // Remove exact duplicate names only. (A brand-level dedupe here used to delete
   // strength variants like "Augmentin 375mg" / "Augmentin 625mg" on every start.)
@@ -280,4 +288,81 @@ function readListView() {
 
 function writeListView(view) {
   try { localStorage.setItem(STORAGE_KEYS.listView, view); } catch (e) {}
+}
+
+// ---------- v1.4: single-item forms count whole items ----------
+// Before v1.4 every form used patas + loose "units" (1 syrup bottle = 10 units
+// in the built-in list). Now Syrup, Cream, Injection... have one price per item
+// (the old "Price / Bottle" = pataPrice, kept as it is) and stock is a plain item count.
+// Runs once: backs up the raw saved data, converts, saves a flag.
+function migrateSingleItemsOnce(isFreshInstall) {
+  let done = false;
+  try { done = !!localStorage.getItem(STORAGE_KEYS.singleItemsMigrated); } catch (e) {}
+  if (done) return;
+
+  if (!isFreshInstall) {
+    try {
+      if (!localStorage.getItem(STORAGE_KEYS.preSingleItemsBackup)) {
+        localStorage.setItem(STORAGE_KEYS.preSingleItemsBackup, JSON.stringify({
+          savedAt: new Date().toISOString(),
+          medicines: localStorage.getItem(STORAGE_KEYS.medicines),
+          sales: localStorage.getItem(STORAGE_KEYS.sales),
+          purchases: localStorage.getItem(STORAGE_KEYS.purchases)
+        }));
+      }
+    } catch (e) {
+      // No room for the backup: change nothing, try again next start
+      showToast('Storage full: item update skipped. Export a backup and free space.');
+      return;
+    }
+  }
+
+  convertSingleItemRecords(medicines, salesHistory, purchases);
+  markSingleItemsMigrated();
+}
+
+function markSingleItemsMigrated() {
+  try { localStorage.setItem(STORAGE_KEYS.singleItemsMigrated, new Date().toISOString()); } catch (e) {}
+}
+
+const round2 = n => Math.round(n * 100) / 100;
+
+// Converts single-item medicines (and their sales / purchases) that still use
+// the old unit count. Old values are kept in a "legacy" field on each record.
+// Safe to run more than once (records are marked with singleItemUnits: true).
+function convertSingleItemRecords(meds, sales, buys) {
+  meds.forEach(med => {
+    if (isPackForm(med.formType) || med.singleItemUnits) return;
+    const per = Math.max(1, Number(med.tabletsPerPata) || 1);
+    med.legacy = {
+      tabletsPerPata: med.tabletsPerPata,
+      tabletPrice: med.tabletPrice,
+      stockUnits: med.stockUnits,
+      minStockUnits: med.minStockUnits
+    };
+    // Per-item price: the old pack (bottle) price. Only if that was empty,
+    // rebuild it from the old unit price.
+    if (!(Number(med.pataPrice) > 0) && Number(med.tabletPrice) > 0) med.pataPrice = round2(Number(med.tabletPrice) * per);
+    med.tabletPrice = Number(med.pataPrice) || 0;
+    med.tabletsPerPata = 1;
+    if (hasStock(med)) med.stockUnits = round2(Number(med.stockUnits) / per);
+    if (med.minStockUnits !== null && med.minStockUnits !== undefined) med.minStockUnits = round2(Number(med.minStockUnits) / per);
+    med.singleItemUnits = true;
+
+    if (per === 1) return;
+    (sales || []).forEach(sale => {
+      if (sale.medId !== med.id || sale.singleItemUnits) return;
+      sale.legacy = { packs: sale.packs, units: sale.units, stockUnits: sale.stockUnits };
+      sale.packs = round2((Number(sale.packs) || 0) + (Number(sale.units) || 0) / per);
+      sale.units = 0;
+      if (sale.stockUnits) sale.stockUnits = round2(Number(sale.stockUnits) / per);
+      sale.singleItemUnits = true;
+    });
+    (buys || []).forEach(buy => {
+      if (buy.medId !== med.id || buy.singleItemUnits) return;
+      buy.legacy = { units: buy.units };
+      buy.units = round2((Number(buy.units) || 0) / per);
+      buy.singleItemUnits = true;
+    });
+  });
 }

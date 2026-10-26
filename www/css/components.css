@@ -247,7 +247,6 @@ html[data-theme="dark"] .type-firstaid   { --chip-bg: #123a2f; --chip-fg: #6ee7b
 .rounded-xl { border-radius: var(--mp-radius-sm) !important; }
 
 /* ===================== Add / Edit form ===================== */
-#screen-add { padding-bottom: 18px; }
 #screen-add > .flex.items-center.justify-between { background: var(--mp-surface); border: 1px solid var(--mp-border); border-radius: var(--mp-radius); padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4); }
 #screen-add #form-title { font-size: 19px; letter-spacing: -.02em; }
 #screen-add > div:first-child p { margin-left: 0 !important; font-size: 13px !important; }
@@ -257,13 +256,20 @@ html[data-theme="dark"] .type-firstaid   { --chip-bg: #123a2f; --chip-fg: #6ee7b
 #screen-add #image-preview-container + div label { min-height: 44px; font-weight: 700; }
 #screen-add textarea { min-height: 76px; resize: vertical; }
 #screen-add form > div > .grid input, #screen-add form > div > .grid select, #screen-add .bg-emerald-50\/60 input { min-height: 44px; }
-/* Sticky Save bar: above the bottom nav (at the bottom while typing, when the nav is hidden) */
+/* Save bar: fixed at the bottom of the screen, just above the bottom nav.
+   It is positioned against #app-container (main is not positioned), so it never
+   scrolls into the middle of the form. The form gets bottom padding so the last
+   fields can scroll above it. --mp-kb = keyboard height when the WebView doesn't shrink. */
+#screen-add { padding-bottom: 96px; }
 #screen-add form > div.mp-form-footer {
-  position: sticky; bottom: calc(var(--mp-nav-h) + 8px); z-index: 15; padding: var(--sp-2);
+  position: absolute; left: 0; right: 0; z-index: 25;
+  bottom: calc(var(--mp-nav-h) + var(--mp-kb, 0px));
+  margin: 0; padding: var(--sp-2) var(--sp-4); border-radius: 0;
   background: var(--mp-nav-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--mp-border); box-shadow: var(--mp-shadow-pop);
+  border: 0; border-top: 1px solid var(--mp-border); box-shadow: 0 -6px 16px rgba(16, 24, 22, .08);
 }
-body.mp-typing #screen-add form > div.mp-form-footer { bottom: 8px; }
+#screen-add.hidden form > div.mp-form-footer { display: none; }
+body.mp-typing #screen-add form > div.mp-form-footer { bottom: var(--mp-kb, 0px); }
 #screen-add form > div.mp-form-footer button { min-height: 48px; border-radius: var(--mp-radius-sm); }
 
 /* Stock fields + shared small inputs */
@@ -347,3 +353,31 @@ main select, .mp-sheet input:not([type=hidden]), .mp-sheet select { min-height: 
 #remove-img-btn::after { content: ''; position: absolute; inset: -6px; }
 label[for="avatar-input"] { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; right: -8px !important; bottom: -8px !important; }
 #sales-filter-select { min-height: 44px; padding: 0 8px; }
+
+/* ===================== v1.4: pack vs single-item forms ===================== */
+/* .is-single is set on the form / popup / calculator for syrup, cream, injection... */
+.is-single .pack-only { display: none !important; }
+.is-single .mp-price-grid, .is-single .mp-qty-grid, .is-single .mp-calc-grid, .is-single .mp-min-grid { grid-template-columns: 1fr !important; }
+.is-single .mp-detail-prices { grid-template-columns: 1fr !important; }
+
+/* Free scheme row: Buy [10] + [1] Free */
+.mp-scheme { margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--mp-border); }
+.mp-scheme-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); font-size: 14px; font-weight: 700; color: var(--mp-ink-2); }
+.mp-scheme-preview { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--mp-brand-text); }
+.mp-scheme-preview:empty { display: none; }
+.mp-scheme-preview.is-error { color: var(--mp-bad-fg); }
+
+.type-pampers { --chip-bg: #e6f0ff; --chip-fg: #2457a8; }
+html[data-theme="dark"] .type-pampers { --chip-bg: #172a4a; --chip-fg: #9cc3ff; }
+
+/* Add/Edit fades in with opacity only: a transform on the screen would make it
+   the containing block of the fixed Save bar while animating */
+main > #screen-add { animation-name: mpFadeOnly; }
+@keyframes mpFadeOnly { from { opacity: 0; } to { opacity: 1; } }
+
+/* Focused / scrolled-to fields stop above the bottom nav (and above the Save bar
+   on Add/Edit, the sticky search on Home) instead of hiding behind them */
+main { scroll-padding-bottom: calc(var(--mp-nav-h) + 16px); }
+main:has(#screen-add:not(.hidden)) { scroll-padding-bottom: calc(var(--mp-nav-h) + 88px); }
+body.mp-typing main:has(#screen-add:not(.hidden)) { scroll-padding-bottom: 88px; }
+main:has(#screen-home:not(.hidden)) { scroll-padding-top: 72px; }

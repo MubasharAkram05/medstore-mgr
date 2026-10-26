@@ -70,6 +70,8 @@ function importDataJSON(e) {
         const customs = getCustomTypes();
         medicines.forEach(m => migrateFormAndType(m, customs));
         saveCustomTypes(customs);
+        // Backups from before v1.4: syrups etc. become whole-item counts
+        convertSingleItemRecords(medicines, salesHistory, purchases);
         removeExactDuplicateMedicines();
         saveToLocalStorage();
         renderListFilters();

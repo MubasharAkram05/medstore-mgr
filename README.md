@@ -6,12 +6,14 @@ Medical Store Manager. An offline Android app for a Pakistani medical store to t
 
 - Fast medicine list: compact cards, List / Grid view, loads more while scrolling, search, Form / Type / Stock filters (remembered)
 - Light / Dark / Auto theme (Profile)
-- Stock in boxes / patas / loose tabs (bottles / units for syrups), auto-subtracted on every sale
-- Low stock and out-of-stock alerts, restock (purchase) entries with history, stock value on Stats
+- Tablets / capsules: box > pata > tablet pricing and stock. Syrups, creams, injections and other forms: one price per item and a simple item count
+- Stock auto-subtracted on every sale; restock with free schemes (e.g. Buy 10 + 1 Free)
+- Low stock and out-of-stock alerts, purchase records (kept in backups), stock value on Stats
+- Android back button: closes popups, goes to the previous tab, press twice on Home to exit
 - 800+ common Pakistani medicines preloaded
 - Add / edit medicines with photo, Form (dosage form), Type (medical use, custom types allowed), shelf place (R/L/B)
 - Box pricing: box price, total tablets and patas auto-calculate pata and tablet rates
-- PKR prescription calculator (patas + loose tablets)
+- PKR prescription calculator (patas + loose tablets, or quantity x price for single items)
 - Quick sell and sales history (today / all time)
 - Stats: revenue, items sold, stock value, low / out-of-stock counts, dosage form breakdown
 - Profile (name, store, location, avatar)

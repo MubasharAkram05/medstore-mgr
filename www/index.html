@@ -263,8 +263,8 @@
             </div>
 
             <div class="p-3 space-y-3">
-              <!-- Box Pricing -->
-              <div class="rounded-xl border border-slate-200 bg-white p-3">
+              <!-- Box Pricing (tablet / capsule only) -->
+              <div class="rounded-xl border border-slate-200 bg-white p-3 pack-only">
                 <div class="flex items-center gap-2 mb-3">
                   <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                     <i data-lucide="package" class="w-4 h-4 text-emerald-600"></i>
@@ -297,9 +297,9 @@
                 </div>
               </div>
 
-              <!-- Pata Pricing -->
+              <!-- Pata Pricing (single items: one price) -->
               <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-                <div class="grid grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-2 gap-2.5 mp-price-grid">
                   <div>
                     <label id="label-pack-price" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Pata (Rs.)</label>
                     <div class="relative">
@@ -307,7 +307,7 @@
                       <input type="number" step="0.01" min="0" id="med-pata-price" required placeholder="0.00" class="w-full h-10 pl-9 pr-2.5 bg-white border border-emerald-200 rounded-xl text-sm font-extrabold text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none">
                     </div>
                   </div>
-                  <div>
+                  <div class="pack-only">
                     <label id="label-per-unit-title" class="block text-[10px] font-bold text-slate-600 mb-1">Price / Tablet (Rs.)</label>
                     <div class="relative">
                       <span class="absolute left-2.5 top-2.5 text-[10px] font-extrabold text-emerald-600">Rs.</span>
@@ -315,7 +315,7 @@
                     </div>
                   </div>
                 </div>
-                <p class="text-[9px] text-emerald-700/70 mt-2">Box price ÷ total tablets = tablet rate. Box price ÷ total pata's = pata rate.</p>
+                <p id="price-help" class="text-xs text-emerald-700/70 mt-2">Box price ÷ total tablets = tablet rate. Box price ÷ total patas = pata rate.</p>
               </div>
             </div>
           </div>
@@ -329,8 +329,8 @@
                 <p class="text-[10px] text-slate-500">Quantity you have now. Sales subtract from it.</p>
               </div>
             </div>
-            <div class="grid grid-cols-3 gap-2">
-              <div>
+            <div class="grid grid-cols-3 gap-2 mp-qty-grid">
+              <div class="pack-only">
                 <label for="stock-boxes" class="mp-mini-label">Boxes</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="stock-boxes" placeholder="0" class="mp-qty-input">
               </div>
@@ -338,18 +338,31 @@
                 <label for="stock-packs" id="label-stock-packs" class="mp-mini-label">Patas</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="stock-packs" placeholder="0" class="mp-qty-input">
               </div>
-              <div>
+              <div class="pack-only">
                 <label for="stock-loose" id="label-stock-loose" class="mp-mini-label">Loose tabs</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="stock-loose" placeholder="0" class="mp-qty-input">
               </div>
             </div>
-            <p id="stock-total-preview" class="text-[10px] text-slate-500 mt-1.5"></p>
+            <p id="stock-total-preview" class="text-xs text-slate-500 mt-1.5"></p>
+
+            <!-- Free scheme, e.g. Buy 10 + 1 Free -->
+            <div class="mp-scheme">
+              <span class="mp-mini-label">Scheme (optional)</span>
+              <div class="mp-scheme-row">
+                <span>Buy</span>
+                <input type="number" inputmode="numeric" min="1" step="1" id="stock-scheme-buy" placeholder="10" class="mp-qty-input" aria-label="Scheme: buy quantity">
+                <span>+</span>
+                <input type="number" inputmode="numeric" min="0" step="1" id="stock-scheme-free" placeholder="1" class="mp-qty-input" aria-label="Scheme: free quantity">
+                <span>Free</span>
+              </div>
+              <p id="stock-scheme-preview" class="mp-scheme-preview"></p>
+            </div>
 
             <div class="mt-3 pt-3 border-t border-slate-200/70">
               <label for="min-stock-qty" class="mp-mini-label">Minimum stock (low stock alert)</label>
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-2 gap-2 mp-min-grid">
                 <input type="number" inputmode="numeric" min="0" step="1" id="min-stock-qty" placeholder="e.g. 2" class="mp-qty-input">
-                <select id="min-stock-unit" aria-label="Minimum stock unit" class="mp-qty-input">
+                <select id="min-stock-unit" aria-label="Minimum stock unit" class="mp-qty-input pack-only">
                   <option value="box">Boxes</option>
                   <option value="pack" selected>Patas</option>
                   <option value="loose">Tabs</option>
@@ -438,8 +451,8 @@
                4. Price / Pata (calculated)
                5. Tablets in 1 Pata
           -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
+          <div class="grid grid-cols-2 gap-3 mp-calc-grid">
+            <div class="pack-only">
               <label class="block text-xs font-semibold text-slate-600 mb-1.5">Full Box Price (Rs.)</label>
               <div class="relative">
                 <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
@@ -447,31 +460,31 @@
               </div>
             </div>
 
-            <div>
+            <div class="pack-only">
               <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Tablets in Box</label>
               <input type="number" min="1" step="1" id="calc-total-tabs-box" placeholder="200" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
 
-            <div>
+            <div class="pack-only">
               <label class="block text-xs font-semibold text-slate-600 mb-1.5">Total Pata's</label>
               <input type="number" min="1" step="1" id="calc-strips-box" placeholder="10" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Price / Pata (Rs.) *</label>
+              <label id="calc-price-label" class="block text-xs font-semibold text-slate-600 mb-1.5">Price / Pata (Rs.) *</label>
               <div class="relative">
                 <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-500">Rs.</span>
                 <input type="number" min="0" step="0.01" id="calc-price-pata" value="" placeholder="50" class="w-full pl-11 pr-2 py-3 bg-white border-2 border-emerald-400 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
               </div>
             </div>
 
-            <div>
+            <div class="pack-only">
               <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tablets in 1 Pata</label>
               <input type="number" min="1" step="1" id="calc-units-pata" value="" placeholder="10" class="w-full px-3 py-3 bg-white border-2 border-slate-300 rounded-xl text-lg font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
           </div>
 
-          <div class="mt-4 pt-4 border-t border-emerald-100 flex items-center justify-between gap-3">
+          <div class="mt-4 pt-4 border-t border-emerald-100 flex items-center justify-between gap-3 pack-only">
             <div>
               <div class="text-sm font-semibold text-slate-700">Price Per Tablet (Rs.):</div>
               <p class="text-[10px] text-slate-400 mt-0.5">Calculated tablet rate</p>
@@ -494,7 +507,7 @@
               <p id="calc-stock-text" class="text-[10px] font-bold text-emerald-700 mt-0.5"></p>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-2 mt-3">
+          <div class="grid grid-cols-2 gap-2 mt-3 pack-only">
             <div class="bg-white border border-slate-200 rounded-xl px-3 py-2">
               <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Full Box Price</div>
               <div id="calc-box-price-display" class="text-sm font-extrabold text-slate-800 mt-0.5">Rs. —</div>
@@ -511,16 +524,16 @@
           <div class="flex items-center justify-between">
             <div>
               <div class="text-sm font-extrabold text-slate-800">Quantity Calculator</div>
-              <div class="text-[10px] text-slate-400">Enter pata/strip and loose tablet quantity</div>
+              <div id="calc-qty-help" class="text-xs text-slate-400">Enter pata/strip and loose tablet quantity</div>
             </div>
             <div class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-extrabold">PKR</div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 mp-qty-grid">
             <div>
               <label id="calc-pata-label" class="block text-xs font-semibold text-slate-600 mb-1">Strips / Bottles</label>
               <input type="number" min="0" value="0" id="calc-pata-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
-            <div>
+            <div class="pack-only">
               <label id="calc-tablet-label" class="block text-xs font-semibold text-slate-600 mb-1">Loose Tablets</label>
               <input type="number" min="0" value="0" id="calc-tablet-qty" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             </div>
@@ -792,12 +805,12 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 mp-qty-grid">
             <div>
               <label id="sell-pack-label" for="sell-pack-qty" class="block text-xs font-semibold text-slate-600 mb-1">Patas</label>
               <input type="number" inputmode="numeric" min="0" value="1" id="sell-pack-qty" class="mp-qty-input">
             </div>
-            <div>
+            <div class="pack-only">
               <label id="sell-unit-label" for="sell-unit-qty" class="block text-xs font-semibold text-slate-600 mb-1">Loose tabs</label>
               <input type="number" inputmode="numeric" min="0" value="0" id="sell-unit-qty" class="mp-qty-input">
             </div>
@@ -856,13 +869,13 @@
             <p id="modal-stock-min" class="text-[10px] text-slate-500"></p>
           </div>
 
-          <div class="grid grid-cols-2 gap-2.5">
-            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="grid grid-cols-2 gap-2.5 mp-detail-prices">
+            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm pack-only">
               <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="package" class="w-3.5 h-3.5"></i><span id="modal-box-title" class="text-[9px] uppercase tracking-wider font-extrabold">Full Box Price</span></div>
               <span id="modal-box-price" class="text-[18px] leading-none font-extrabold text-emerald-600">Rs. —</span>
               <span id="modal-box-detail" class="text-[10px] text-slate-400 block mt-1">Complete box</span>
             </div>
-            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm pack-only">
               <div class="flex items-center gap-1.5 text-slate-400 mb-1"><i data-lucide="pill" class="w-3.5 h-3.5"></i><span id="modal-total-tabs-title" class="text-[9px] uppercase tracking-wider font-extrabold">Total Tablets</span></div>
               <span id="modal-total-tabs" class="text-[18px] leading-none font-extrabold text-teal-600">—</span>
               <span id="modal-total-tabs-detail" class="text-[10px] text-slate-400 block mt-1">Tablets in box</span>
@@ -872,7 +885,7 @@
               <span id="modal-pata-price" class="text-[18px] leading-none font-extrabold text-emerald-700">Rs. 0.00</span>
               <span id="modal-pata-count" class="text-[10px] text-emerald-700/70 block mt-1">10 tablets</span>
             </div>
-            <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm">
+            <div class="p-3 bg-teal-50/70 rounded-2xl border border-teal-100 shadow-sm pack-only">
               <div class="flex items-center gap-1.5 text-teal-700 mb-1"><i data-lucide="coins" class="w-3.5 h-3.5"></i><span id="modal-unit-title" class="text-[9px] uppercase tracking-wider font-extrabold">Price Per Tablet</span></div>
               <span id="modal-tablet-price" class="text-[18px] leading-none font-extrabold text-teal-700">Rs. 0.00</span>
               <span id="modal-stock-text" class="text-[10px] text-teal-700 font-bold block mt-1"></span>
@@ -891,25 +904,14 @@
             <p class="text-[9px] text-amber-700/70 mt-1.5">R1.1–R3.7 • L1.1–L3.7 • B1.1–B1.7</p>
           </div>
 
-          <!-- Restock history -->
-          <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="flex items-center gap-1.5 text-slate-500 mb-1.5"><i data-lucide="history" class="w-4 h-4"></i><span class="text-[10px] uppercase tracking-wider font-extrabold">Restock History</span></div>
-            <div id="modal-restock-history" class="space-y-1.5"></div>
-          </div>
         </div>
 
         <!-- Sticky footer actions -->
         <div class="mp-sheet-footer space-y-2">
-          <div class="grid grid-cols-2 gap-2">
-            <button id="modal-sell-btn" class="mp-btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
-              <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-              <span>Sell Now</span>
-            </button>
-            <button id="modal-calc-btn" class="mp-btn bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-600/20">
-              <i data-lucide="calculator" class="w-4 h-4"></i>
-              <span>Calculator</span>
-            </button>
-          </div>
+          <button id="modal-sell-btn" class="mp-btn w-full bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Sell Now</span>
+          </button>
           <div class="grid grid-cols-3 gap-2">
             <button id="modal-restock-btn" class="mp-btn mp-btn-sm bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100">
               <i data-lucide="package-plus" class="w-4 h-4"></i>
@@ -954,8 +956,8 @@
           </div>
           <div>
             <span class="mp-mini-label">Quantity received</span>
-            <div class="grid grid-cols-3 gap-2">
-              <div>
+            <div class="grid grid-cols-3 gap-2 mp-qty-grid">
+              <div class="pack-only">
                 <label for="restock-boxes" class="text-[10px] text-slate-500">Boxes</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="restock-boxes" placeholder="0" class="mp-qty-input">
               </div>
@@ -963,20 +965,30 @@
                 <label for="restock-packs" id="label-restock-packs" class="text-[10px] text-slate-500">Patas</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="restock-packs" placeholder="0" class="mp-qty-input">
               </div>
-              <div>
+              <div class="pack-only">
                 <label for="restock-loose" id="label-restock-loose" class="text-[10px] text-slate-500">Loose tabs</label>
                 <input type="number" inputmode="numeric" min="0" step="1" id="restock-loose" placeholder="0" class="mp-qty-input">
               </div>
             </div>
-            <p id="restock-preview" class="text-[10px] text-slate-500 mt-1.5"></p>
           </div>
+          <div class="mp-scheme">
+            <span class="mp-mini-label">Scheme (optional)</span>
+            <div class="mp-scheme-row">
+              <span>Buy</span>
+              <input type="number" inputmode="numeric" min="1" step="1" id="restock-scheme-buy" placeholder="10" class="mp-qty-input" aria-label="Scheme: buy quantity">
+              <span>+</span>
+              <input type="number" inputmode="numeric" min="0" step="1" id="restock-scheme-free" placeholder="1" class="mp-qty-input" aria-label="Scheme: free quantity">
+              <span>Free</span>
+            </div>
+          </div>
+          <p id="restock-preview" class="mp-scheme-preview"></p>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label for="restock-supplier" class="mp-mini-label">Supplier (optional)</label>
               <input type="text" id="restock-supplier" placeholder="e.g. Ali Pharma" class="mp-qty-input">
             </div>
             <div>
-              <label for="restock-price-box" class="mp-mini-label">Price / box (optional)</label>
+              <label for="restock-price-box" id="label-restock-price" class="mp-mini-label">Price / box (optional)</label>
               <input type="number" inputmode="decimal" min="0" step="0.01" id="restock-price-box" placeholder="Rs." class="mp-qty-input">
             </div>
           </div>
