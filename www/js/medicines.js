@@ -49,28 +49,16 @@ function getMedicinePlaces() {
   return places;
 }
 
-function populateMedicinePlaces(selectedPlace = '') {
-  const select = document.getElementById('modal-place-select');
-  if (!select) return;
-  select.innerHTML = '<option value="">Select Place</option>' + getMedicinePlaces().map(place => `<option value="${place}">${place}</option>`).join('');
-  select.value = selectedPlace || '';
-}
-
+// Fills the Place dropdown in the Add/Edit form (#med-place). Called on startup
+// too: before, the options were only added after a reset, so the first Add had none.
+// A place saved earlier that is not in the standard list is kept as an extra option.
 function populateEditMedicinePlaces(selectedPlace = '') {
   const select = document.getElementById('med-place');
   if (!select) return;
-  select.innerHTML = '<option value="">Select Place</option>' + getMedicinePlaces().map(place => `<option value="${place}">${place}</option>`).join('');
+  const places = getMedicinePlaces();
+  if (selectedPlace && !places.includes(selectedPlace)) places.push(selectedPlace);
+  select.innerHTML = '<option value="">Select Place</option>' + places.map(place => `<option value="${escapeHtml(place)}">${escapeHtml(place)}</option>`).join('');
   select.value = selectedPlace || '';
-}
-
-function saveMedicinePlace() {
-  if (!currentDetailsMedicineId) return;
-  const med = medicines.find(m => m.id === currentDetailsMedicineId);
-  const select = document.getElementById('modal-place-select');
-  if (!med || !select) return;
-  med.place = select.value;
-  saveToLocalStorage();
-  showToast(select.value ? `Place ${select.value} saved.` : 'Place cleared.');
 }
 
 function autoCalcUnitPrice() {
@@ -118,6 +106,33 @@ function autoCalcBoxPricing() {
   }
 }
 
+// Pack sizes as currently typed in the Add/Edit form (used by the stock fields)
+function getFormPackSizes() {
+  return getPackSizes({
+    tabletsPerPata: document.getElementById('med-tablets-per-pata').value,
+    stripsPerBox: document.getElementById('med-strips-per-box').value,
+    totalTabsBox: document.getElementById('med-total-tabs-box').value
+  });
+}
+
+// Live "Total: ..." line under the stock fields
+function updateStockPreview() {
+  const formType = document.getElementById('med-form-type').value;
+  const sizes = getFormPackSizes();
+  const result = readQtyInputs('stock', sizes, formType);
+  const preview = document.getElementById('stock-total-preview');
+  const error = document.getElementById('stock-error');
+  if (error) error.textContent = result.error || '';
+  if (!preview) return;
+  if (result.error) preview.textContent = '';
+  else if (result.empty) preview.textContent = 'Leave empty if you don\'t count stock for this item.';
+  else {
+    const text = formatUnits(result.units, formType, sizes);
+    const raw = `${result.units} ${getUnitNames(formType).loose[1]}`;
+    preview.textContent = `Total: ${text}${text === raw ? '' : ` (${raw})`}`;
+  }
+}
+
 // Add / Edit Form
 function saveMedicine(e) {
   e.preventDefault();
@@ -143,12 +158,26 @@ function saveMedicine(e) {
   const notes = document.getElementById('med-notes').value.trim();
   const place = document.getElementById('med-place').value;
 
+  // Stock + minimum stock, both stored in the smallest unit
+  const sizes = getFormPackSizes();
+  const stock = readQtyInputs('stock', sizes, formType);
+  const minStock = readMinStockInput(sizes);
+  const stockError = stock.error || minStock.error;
+  document.getElementById('stock-error').textContent = stockError || '';
+  if (stockError) {
+    document.getElementById('stock-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  const stockUnits = stock.empty ? null : stock.units;
+  const minStockUnits = minStock.empty ? null : minStock.units;
+
   if (id) {
     const medIndex = medicines.findIndex(m => m.id === id);
     if (medIndex !== -1) {
       medicines[medIndex] = {
         ...medicines[medIndex],
         name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
+        stockUnits, minStockUnits,
         image: currentImageData || medicines[medIndex].image
       };
     }
@@ -156,6 +185,7 @@ function saveMedicine(e) {
     const newMed = {
       id: 'med_' + Date.now(),
       name, formType, category, pataPrice, tabletsPerPata, tabletPrice, boxPrice, stripsPerBox, totalTabsBox, notes, place,
+      stockUnits, minStockUnits,
       image: currentImageData,
       createdAt: new Date().toISOString()
     };
@@ -163,18 +193,20 @@ function saveMedicine(e) {
   }
 
   saveToLocalStorage();
-  renderCategoryPills();
+  renderListFilters();
   resetForm();
-  let savedTab = 'home';
-  savedTab = readActiveTab() || 'home';
-  if (!['home','add','calc','stats','profile'].includes(savedTab)) savedTab = 'home';
-  switchTab(savedTab);
+  // Go back to the screen the user came from (before, it stayed on the Add screen)
+  switchTab(tabBeforeAdd || 'home');
+  renderMedicineList();
   showToast(id ? 'Medicine updated!' : 'Medicine saved!');
 }
 
 function editMedicine(id) {
   const med = medicines.find(m => m.id === id);
   if (!med) return;
+
+  // Start clean so nothing (photo, custom category, labels) leaks from the last form
+  resetForm();
 
   document.getElementById('med-id').value = med.id;
   document.getElementById('med-name').value = cleanMedicineName(med.name);
@@ -188,13 +220,15 @@ function editMedicine(id) {
   document.getElementById('med-notes').value = med.notes || '';
   populateEditMedicinePlaces(med.place || '');
 
-  if (['Tablets', 'Syrups', 'IV', 'Suspension', 'Capsule', 'Cream', 'Gel', 'Ointment', 'Liquid', 'Sachet', 'Powder', 'Inhaler', 'Painkiller', 'Antibiotic', 'Cough & Cold', 'Vitamins', 'Cardiovascular', 'Diabetes', 'Daily Dose', 'First Aid', 'Gastro'].includes(med.category)) {
-    document.getElementById('med-category-select').value = med.category;
+  const categorySelect = document.getElementById('med-category-select');
+  const knownCategories = Array.from(categorySelect.options).map(o => o.value).filter(v => v !== 'Other');
+  if (knownCategories.includes(med.category)) {
+    categorySelect.value = med.category;
     document.getElementById('custom-cat-container').classList.add('hidden');
   } else {
-    document.getElementById('med-category-select').value = 'Other';
+    categorySelect.value = 'Other';
     document.getElementById('custom-cat-container').classList.remove('hidden');
-    document.getElementById('med-category-custom').value = med.category;
+    document.getElementById('med-category-custom').value = med.category || '';
   }
 
   if (med.image) {
@@ -205,17 +239,25 @@ function editMedicine(id) {
     document.getElementById('image-placeholder-icon').classList.add('hidden');
   }
 
+  // Stock: split the saved unit count back into box / pack / loose fields
+  const sizes = getPackSizes(med);
+  if (hasStock(med)) fillQtyInputs('stock', med.stockUnits, sizes);
+  if (med.minStockUnits !== null && med.minStockUnits !== undefined) fillMinStockInput(med.minStockUnits, sizes);
+
   document.getElementById('form-title').textContent = 'Edit Medicine';
   updateFormTypeLabels();
-  autoCalcBoxPricing();
+  // Prices are NOT re-calculated here, so a manually changed tablet/pata
+  // price is shown as it was saved.
   switchTab('add');
 }
 
 function deleteMedicine(id) {
   if (confirm('Are you sure you want to delete this medicine?')) {
-    medicines = medicines.filter(m => !selectedMedIds.has(m.id) && m.id !== id);
+    // Only this medicine (before, any bulk-selected medicines were deleted too)
+    medicines = medicines.filter(m => m.id !== id);
+    selectedMedIds.delete(id);
     saveToLocalStorage();
-    renderCategoryPills();
+    renderListFilters();
     renderMedicineList();
     showToast('Medicine deleted.');
   }
@@ -225,22 +267,43 @@ function resetForm() {
   document.getElementById('medicine-form').reset();
   document.getElementById('med-id').value = '';
   document.getElementById('form-title').textContent = 'Add New Medicine';
+  document.getElementById('custom-cat-container').classList.add('hidden');
+  document.getElementById('stock-error').textContent = '';
   populateEditMedicinePlaces('');
   removeImage();
+  updateFormTypeLabels();
+}
+
+// Photos are shrunk before saving: a full camera photo (2-5 MB as text)
+// quickly fills the ~5 MB localStorage limit and then nothing can be saved.
+function readImageAsSmallDataUrl(file, maxSize, callback) {
+  const reader = new FileReader();
+  reader.onload = event => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => callback(event.target.result);
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function handleImageUpload(e) {
   const file = e.target.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      currentImageData = event.target.result;
+    readImageAsSmallDataUrl(file, 600, dataUrl => {
+      currentImageData = dataUrl;
       document.getElementById('image-preview').src = currentImageData;
       document.getElementById('image-preview').classList.remove('hidden');
       document.getElementById('remove-img-btn').classList.remove('hidden');
       document.getElementById('image-placeholder-icon').classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
+    });
   }
 }
 
@@ -261,25 +324,30 @@ function toggleCustomCategory(val) {
   }
 }
 
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Labels follow the form type: Pata/Tab for tablets, Bottle/Unit for syrups, Pack/Unit for the rest.
+// (The old version looked for a missing #label-unit-count element and crashed.)
 function updateFormTypeLabels() {
   const type = document.getElementById('med-form-type').value;
-  const packLabel = document.getElementById('label-pack-price');
-  const unitLabel = document.getElementById('label-unit-count');
-  const unitTitle = document.getElementById('label-per-unit-title');
+  const names = getUnitNames(type);
+  const Pack = capitalize(names.pack[0]);
+  const Loose = capitalize(names.loose[0]);
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
-  if (type === 'Syrup') {
-    packLabel.textContent = 'Price / Bottle (Rs.) *';
-    if (unitLabel) unitLabel.textContent = 'Bottles in Pack (Optional)';
-    unitTitle.textContent = 'Price Per Bottle (Rs.):';
-  } else if (type === 'Injection') {
-    packLabel.textContent = 'Price / Box (Rs.) *';
-    if (unitLabel) unitLabel.textContent = 'Vials in Box (Optional)';
-    unitTitle.textContent = 'Price Per Vial (Rs.):';
-  } else {
-    packLabel.textContent = 'Price / Pata (Rs.) *';
-    if (unitLabel) unitLabel.textContent = 'Tablets in 1 Pata';
-    unitTitle.textContent = 'Price Per Tablet (Rs.):';
+  setText('label-pack-price', `Price / ${Pack} (Rs.) *`);
+  setText('label-per-unit-title', `Price / ${Loose} (Rs.)`);
+  setText('label-unit-count', `${capitalize(names.loose[1])} in 1 ${Pack}`);
+  setText('label-total-packs', `Total ${capitalize(names.pack[1])} in Box`);
+  setText('label-total-units', `Total ${capitalize(names.loose[1])} in Box`);
+  setText('label-stock-packs', capitalize(names.pack[1]));
+  setText('label-stock-loose', `Loose ${names.loose[1]}`);
+  const minUnit = document.getElementById('min-stock-unit');
+  if (minUnit) {
+    minUnit.options[1].textContent = capitalize(names.pack[1]);
+    minUnit.options[2].textContent = capitalize(names.loose[1]);
   }
+  updateStockPreview();
 }
 
 function toggleBulkSelectMode() {
@@ -328,13 +396,27 @@ function deleteSelectedMedicines() {
     medicines = medicines.filter(m => !selectedMedIds.has(m.id));
     exitBulkSelectMode();
     saveToLocalStorage();
-    renderCategoryPills();
+    renderListFilters();
     renderMedicineList();
     showToast('Selected items deleted.');
   }
 }
 
-// Enhanced Deduplication logic by Brand Key
+// Startup / import cleanup: removes only records with the exact same name
+// (ignoring case and spaces). Keeps the first one, which is the newest.
+function removeExactDuplicateMedicines() {
+  const seen = new Set();
+  medicines = medicines.filter(med => {
+    const key = String(med.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// "Remove Duplicates" button: brand-level dedupe (also removes strength variants)
+
 function removeDuplicateMedicines(silent = false) {
   const brandMap = new Map();
   let removedCount = 0;
@@ -352,7 +434,7 @@ function removeDuplicateMedicines(silent = false) {
 
   medicines = Array.from(brandMap.values());
   saveToLocalStorage();
-  renderCategoryPills();
+  renderListFilters();
   renderMedicineList();
 
   if (!silent) {
@@ -364,9 +446,12 @@ function clearAllDataWithConfirm() {
   if (confirm('Clear all data and reset database to standard list?')) {
     clearAllStorage();
     medicines = generatePakistaniMedsWithSeeds();
+    normalizeMedicines(medicines);
     salesHistory = [];
+    purchases = [];
+    listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
     saveToLocalStorage();
-    renderCategoryPills();
+    renderListFilters();
     renderMedicineList();
     showToast('Database reset!');
   }

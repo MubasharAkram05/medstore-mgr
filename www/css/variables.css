@@ -9,4 +9,6 @@
   --mp-border: #e2e8f0;
   --mp-surface: #ffffff;
   --mp-bg: #f5f8f7;
+  /* Bottom nav height incl. phone safe area (sticky Save bar sits above it) */
+  --mp-nav-h: calc(68px + env(safe-area-inset-bottom, 0px));
 }
