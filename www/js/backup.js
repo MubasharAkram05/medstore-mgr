@@ -66,6 +66,10 @@ function importDataJSON(e) {
         }
         // Old backups: fill in the new stock fields without changing anything else
         normalizeMedicines(medicines);
+        // Old backups store form names (TAB, SYRUP...) as the type: fix them the same way
+        const customs = getCustomTypes();
+        medicines.forEach(m => migrateFormAndType(m, customs));
+        saveCustomTypes(customs);
         removeExactDuplicateMedicines();
         saveToLocalStorage();
         renderListFilters();

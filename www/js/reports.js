@@ -10,9 +10,20 @@ function renderHomeDashboard() {
   const counts = getStockCounts();
   if (byId('dash-low-stock-count')) byId('dash-low-stock-count').textContent = (counts.low + counts.out).toLocaleString();
   if (byId('dash-low-stock-detail')) byId('dash-low-stock-detail').textContent = `${counts.out} out of stock`;
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  // One greeting only, based on the time
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   if (byId('home-greeting')) byId('home-greeting').textContent = greeting;
+  if (byId('home-greeting-icon')) byId('home-greeting-icon').outerHTML = iconSvg(hour < 17 ? 'sun' : 'moon', 'w-4 h-4').replace('<svg', '<svg id="home-greeting-icon"');
+  if (byId('home-date')) byId('home-date').textContent = now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+  if (byId('home-store-name')) byId('home-store-name').textContent = userProfile.store || 'MedStoreMgr';
+  // Today's sales
+  const today = now.toDateString();
+  const todaySales = salesHistory.filter(s => new Date(s.date).toDateString() === today);
+  const todayTotal = todaySales.reduce((sum, s) => sum + (Number(s.revenue) || 0), 0);
+  if (byId('dash-today-sales')) byId('dash-today-sales').textContent = `Rs. ${Math.round(todayTotal).toLocaleString()}`;
+  if (byId('dash-today-orders')) byId('dash-today-orders').textContent = `${todaySales.length} ${todaySales.length === 1 ? 'sale' : 'sales'}`;
 }
 
 // Low / out-of-stock counts and total stock value (stock x unit price)
@@ -45,7 +56,7 @@ function updateStatsScreen() {
   document.getElementById('stat-today-sales-count').textContent = `Today: ${todaySales.length} orders`;
 
   document.getElementById('stat-total-meds').textContent = totalMeds.toLocaleString();
-  document.getElementById('stat-total-categories').textContent = `${categories} Categories`;
+  document.getElementById('stat-total-categories').textContent = `${categories} Types`;
 
   const counts = getStockCounts();
   document.getElementById('stat-stock-value').textContent = `Rs. ${counts.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

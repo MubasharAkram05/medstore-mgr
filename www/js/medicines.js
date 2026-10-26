@@ -1,5 +1,5 @@
 // medicines.js
-// Add / edit / delete medicines, box & pata pricing, places, bulk select, dedupe, seed data.
+// Add / edit / delete medicines, box & pata pricing, places, Form/Type fields, dedupe, seed data.
 
 // Helper: Clean product names and remove version suffixes like V2, V3, #1, etc.
 function cleanMedicineName(name) {
@@ -141,10 +141,24 @@ function saveMedicine(e) {
   const name = cleanMedicineName(document.getElementById('med-name').value);
   const formType = document.getElementById('med-form-type').value;
 
+  // Type: a fixed type, a saved custom type, or a new custom type typed by the user
   let category = document.getElementById('med-category-select').value;
-  if (category === 'Other') {
-    category = document.getElementById('med-category-custom').value.trim() || 'General';
+  const typeError = document.getElementById('type-error');
+  typeError.textContent = '';
+  if (category === CUSTOM_TYPE_VALUE) {
+    const typed = document.getElementById('med-category-custom').value;
+    if (!typed.trim()) {
+      typeError.textContent = 'Type a name for the new type, or pick one from the list.';
+      document.getElementById('med-category-custom').focus();
+      return;
+    }
+    category = canonicalType(typed);
+    if (canonicalForm(category)) {
+      typeError.textContent = `"${category}" is a form. Choose it under Form instead.`;
+      return;
+    }
   }
+  category = canonicalType(category) || 'Other';
 
   const pataPrice = parseFloat(document.getElementById('med-pata-price').value) || 0;
   const tabletsPerPata = parseInt(document.getElementById('med-tablets-per-pata').value) || 1;
@@ -192,6 +206,7 @@ function saveMedicine(e) {
     medicines.unshift(newMed);
   }
 
+  rememberCustomType(category);
   saveToLocalStorage();
   renderListFilters();
   resetForm();
@@ -220,16 +235,8 @@ function editMedicine(id) {
   document.getElementById('med-notes').value = med.notes || '';
   populateEditMedicinePlaces(med.place || '');
 
-  const categorySelect = document.getElementById('med-category-select');
-  const knownCategories = Array.from(categorySelect.options).map(o => o.value).filter(v => v !== 'Other');
-  if (knownCategories.includes(med.category)) {
-    categorySelect.value = med.category;
-    document.getElementById('custom-cat-container').classList.add('hidden');
-  } else {
-    categorySelect.value = 'Other';
-    document.getElementById('custom-cat-container').classList.remove('hidden');
-    document.getElementById('med-category-custom').value = med.category || '';
-  }
+  document.getElementById('med-form-type').value = canonicalForm(med.formType) || 'Tablet';
+  populateTypeSelect(med.category || 'Other');
 
   if (med.image) {
     currentImageData = med.image;
@@ -252,10 +259,10 @@ function editMedicine(id) {
 }
 
 function deleteMedicine(id) {
-  if (confirm('Are you sure you want to delete this medicine?')) {
-    // Only this medicine (before, any bulk-selected medicines were deleted too)
+  const med = medicines.find(m => m.id === id);
+  if (!med) return;
+  if (confirm(`Delete "${med.name}"? This can't be undone.`)) {
     medicines = medicines.filter(m => m.id !== id);
-    selectedMedIds.delete(id);
     saveToLocalStorage();
     renderListFilters();
     renderMedicineList();
@@ -267,8 +274,9 @@ function resetForm() {
   document.getElementById('medicine-form').reset();
   document.getElementById('med-id').value = '';
   document.getElementById('form-title').textContent = 'Add New Medicine';
-  document.getElementById('custom-cat-container').classList.add('hidden');
   document.getElementById('stock-error').textContent = '';
+  document.getElementById('type-error').textContent = '';
+  populateTypeSelect('Other');
   populateEditMedicinePlaces('');
   removeImage();
   updateFormTypeLabels();
@@ -316,12 +324,26 @@ function removeImage() {
   document.getElementById('img-input').value = '';
 }
 
+// Type dropdown in Add/Edit: fixed types, saved custom types, then "Custom..."
+function populateTypeSelect(selected) {
+  const select = document.getElementById('med-category-select');
+  const { fixed, customs } = getAllTypes();
+  const value = canonicalType(selected) || 'Other';
+  if (!fixed.includes(value) && !customs.includes(value)) customs.push(value);
+  select.innerHTML =
+    fixed.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('') +
+    (customs.length ? `<optgroup label="Your types">${customs.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}</optgroup>` : '') +
+    `<option value="${CUSTOM_TYPE_VALUE}">+ Custom type...</option>`;
+  select.value = value;
+  document.getElementById('med-category-custom').value = '';
+  toggleCustomCategory(select.value);
+}
+
 function toggleCustomCategory(val) {
-  if (val === 'Other') {
-    document.getElementById('custom-cat-container').classList.remove('hidden');
-  } else {
-    document.getElementById('custom-cat-container').classList.add('hidden');
-  }
+  const box = document.getElementById('custom-cat-container');
+  box.classList.toggle('hidden', val !== CUSTOM_TYPE_VALUE);
+  document.getElementById('type-error').textContent = '';
+  if (val === CUSTOM_TYPE_VALUE) setTimeout(() => document.getElementById('med-category-custom').focus(), 0);
 }
 
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -348,66 +370,6 @@ function updateFormTypeLabels() {
     minUnit.options[2].textContent = capitalize(names.loose[1]);
   }
   updateStockPreview();
-}
-
-function updateSelectedCount() {
-  const el = document.getElementById('selected-count-text');
-  if (el) el.textContent = `${selectedMedIds.size} selected`;
-}
-
-// Called after every list render: un-select medicines that are no longer shown
-// (filter / search changed), so "Delete Selected" can never delete hidden items.
-function pruneSelectionToVisible() {
-  selectedMedIds.forEach(id => { if (!visibleMedIds.has(id)) selectedMedIds.delete(id); });
-  updateSelectedCount();
-}
-
-function toggleBulkSelectMode() {
-  isBulkSelectMode = !isBulkSelectMode;
-  const bar = document.getElementById('bulk-action-bar');
-  const btnText = document.getElementById('bulk-btn-text');
-
-  if (isBulkSelectMode) {
-    bar.classList.remove('hidden');
-    btnText.textContent = 'Done';
-  } else {
-    bar.classList.add('hidden');
-    btnText.textContent = 'Select';
-  }
-  selectedMedIds.clear();
-  renderMedicineList();
-}
-
-function exitBulkSelectMode() {
-  isBulkSelectMode = false;
-  document.getElementById('bulk-action-bar').classList.add('hidden');
-  document.getElementById('bulk-btn-text').textContent = 'Select';
-  selectedMedIds.clear();
-  renderMedicineList();
-}
-
-function toggleSelectMed(id, checked) {
-  if (checked && visibleMedIds.has(id)) selectedMedIds.add(id);
-  else selectedMedIds.delete(id);
-  updateSelectedCount();
-}
-
-function deleteSelectedMedicines() {
-  // Only medicines that are selected AND currently shown
-  const ids = new Set([...selectedMedIds].filter(id => visibleMedIds.has(id)));
-  const count = ids.size;
-  if (count === 0) {
-    showToast('No medicines selected.');
-    return;
-  }
-  if (confirm(`Delete ${count} ${count === 1 ? 'medicine' : 'medicines'}?`)) {
-    medicines = medicines.filter(m => !ids.has(m.id));
-    exitBulkSelectMode();
-    saveToLocalStorage();
-    renderListFilters();
-    renderMedicineList();
-    showToast(`${count} ${count === 1 ? 'medicine' : 'medicines'} deleted.`);
-  }
 }
 
 // Startup / import cleanup: removes only records with the exact same name
@@ -453,6 +415,7 @@ function removeDuplicateMedicines(silent = false) {
 function clearAllDataWithConfirm() {
   if (confirm('Clear all data and reset database to standard list?')) {
     clearAllStorage();
+    markFormTypeMigrated();
     medicines = generatePakistaniMedsWithSeeds();
     normalizeMedicines(medicines);
     salesHistory = [];
@@ -697,7 +660,7 @@ function generatePakistaniMedsWithSeeds() {
       id: "pkr_item_" + String(generated.length + 1).padStart(4, "0"),
       name: brand,
       formType: form,
-      category: form === "Injection" ? "IV" : form === "Syrup" ? "SYRUP" : ['Suspension','Capsule','Cream','Gel','Ointment','Liquid','Sachet','Powder','Inhaler'].includes(form) ? form : "TAB",
+      category: guessType({ name: brand, genericName: generic, formType: form }),
       genericName: generic,
       manufacturer,
       pataPrice: price,

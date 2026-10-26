@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dark.css">
+  <!-- Sets light/dark before the page paints -->
+  <script src="js/theme.js"></script>
 </head>
 <body class="h-full flex justify-center items-center bg-slate-900 md:p-4 text-slate-800">
 
@@ -20,17 +23,17 @@
   <div id="app-container" class="w-full max-w-md h-full md:h-[844px] bg-slate-50 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border-0 md:border border-slate-700">
 
     <!-- Top Header -->
-    <header class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white px-5 pt-5 pb-4 shadow-md flex justify-between items-center z-10">
+    <header class="text-white flex justify-between items-center z-10">
       <div>
         <div class="flex items-center space-x-2">
-          <i data-lucide="pill" class="w-6 h-6 text-emerald-300"></i>
+          <i data-lucide="pill" class="w-6 h-6 text-emerald-200"></i>
           <h1 class="font-bold text-xl tracking-tight">MedStoreMgr</h1>
         </div>
-        <p class="text-xs text-emerald-100 mt-0.5">Stock & Sales Manager (Rs.)</p>
+        <p class="text-xs text-emerald-50">Stock &amp; Sales Manager (Rs.)</p>
       </div>
       <div class="flex items-center space-x-1.5">
-        <button id="header-profile-btn" data-action="switchTab" data-tab="profile" class="bg-emerald-700/60 hover:bg-emerald-700 p-1.5 rounded-full text-emerald-100 hover:text-white transition-colors flex items-center justify-center border border-emerald-500/30" title="Profile & Settings">
-          <img id="header-avatar-img" src="" class="w-7 h-7 rounded-full object-cover hidden">
+        <button id="header-profile-btn" data-action="switchTab" data-tab="profile" class="text-white flex items-center justify-center border" title="Profile &amp; Settings" aria-label="Profile and settings">
+          <img id="header-avatar-img" src="" alt="" class="w-8 h-8 rounded-full object-cover hidden">
           <i id="header-avatar-icon" data-lucide="user" class="w-5 h-5"></i>
         </button>
       </div>
@@ -40,124 +43,133 @@
     <main class="flex-1 overflow-y-auto no-scrollbar p-4 pb-24">
 
       <!-- SCREEN 1: MEDICINE LIST (HOME) -->
-      <section id="screen-home" class="space-y-3">
+      <section id="screen-home">
 
-        <!-- Premium Pharmacy Dashboard -->
-        <div id="home-dashboard" class="mp-dashboard">
-          <div class="mp-dashboard-hero">
-            <div class="mp-hero-glow mp-hero-glow-1"></div>
-            <div class="mp-hero-glow mp-hero-glow-2"></div>
-            <div class="mp-hero-copy">
-              <span class="mp-eyebrow"><i data-lucide="activity" class="w-3.5 h-3.5"></i> PHARMACY OVERVIEW</span>
-              <h2><span id="home-greeting">Good day</span></h2>
-              <p>Manage medicines, prices and sales in one place.</p>
-            </div>
-            <div class="mp-hero-icon"><i data-lucide="pill" class="w-6 h-6"></i></div>
+        <!-- Overview: compact horizontal row -->
+        <div class="mp-overview" id="home-dashboard" aria-label="Overview">
+          <div class="mp-ov-card mp-ov-greet">
+            <span class="mp-ov-label"><i data-lucide="sun" class="w-4 h-4" id="home-greeting-icon"></i><span id="home-date">Today</span></span>
+            <strong id="home-greeting">Good day</strong>
+            <small id="home-store-name">MedStoreMgr</small>
           </div>
-          <div class="mp-dash-row">
-            <div class="mp-dashboard-strip">
-              <div class="mp-strip-icon"><i data-lucide="store" class="w-5 h-5"></i></div>
-              <div class="mp-strip-copy"><span>Total Medicines</span><strong id="dash-medicine-count">0</strong><small>in your database</small></div>
-            </div>
-            <button type="button" data-action="showLowStock" class="mp-dashboard-strip mp-low-tile" aria-label="Show low stock medicines">
-              <div class="mp-strip-icon"><i data-lucide="triangle-alert" class="w-5 h-5"></i></div>
-              <div class="mp-strip-copy"><span>Low Stock</span><strong id="dash-low-stock-count">0</strong><small id="dash-low-stock-detail">0 out of stock</small></div>
+          <div class="mp-ov-card">
+            <span class="mp-ov-label"><i data-lucide="package" class="mp-ov-icon"></i>Medicines</span>
+            <strong id="dash-medicine-count">0</strong>
+            <small>in your list</small>
+          </div>
+          <button type="button" class="mp-ov-card mp-ov-warn" data-action="showLowStock" aria-label="Show low stock medicines">
+            <span class="mp-ov-label"><i data-lucide="triangle-alert" class="mp-ov-icon"></i>Low stock</span>
+            <strong id="dash-low-stock-count">0</strong>
+            <small id="dash-low-stock-detail">0 out of stock</small>
+          </button>
+          <button type="button" class="mp-ov-card mp-ov-sales" data-action="switchTab" data-tab="stats" aria-label="Open sales stats">
+            <span class="mp-ov-label"><i data-lucide="banknote" class="mp-ov-icon"></i>Today's sales</span>
+            <strong id="dash-today-sales">Rs. 0</strong>
+            <small id="dash-today-orders">0 sales</small>
+          </button>
+        </div>
+
+        <!-- Search: sticks under the header while scrolling -->
+        <div class="mp-sticky-search">
+          <div class="mp-search">
+            <i data-lucide="search"></i>
+            <input type="search" id="search-input" placeholder="Search medicine or generic" autocomplete="off" enterkeyhint="search" aria-label="Search medicines">
+            <button id="clear-search" type="button" data-action="clearSearch" class="hidden" aria-label="Clear search">
+              <i data-lucide="x" class="w-5 h-5"></i>
             </button>
           </div>
         </div>
 
-        <!-- Search & Filter Bar -->
-        <div class="space-y-2">
-          <div class="relative">
-            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-slate-400"></i>
-            <input type="text" id="search-input" placeholder="Search medicines, generics..." class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
-            <button id="clear-search" data-action="clearSearch" class="hidden absolute right-3 top-3 text-slate-400 hover:text-slate-600">
-              <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-          </div>
+        <!-- Filters (collapsible) -->
+        <div class="mp-toolbar">
+          <button type="button" id="filters-toggle" class="mp-chip-btn" data-action="toggleFilters" aria-expanded="false" aria-controls="list-filters">
+            <i data-lucide="sliders-horizontal"></i><span id="filters-label">Filters</span><i data-lucide="chevron-down" class="mp-chevron"></i>
+          </button>
+          <button type="button" id="reset-filters-btn" class="mp-chip-btn mp-chip-clear hidden" data-action="resetListFilters">
+            <i data-lucide="x"></i><span>Clear</span>
+          </button>
+        </div>
+        <div id="list-filters" class="mp-filter-grid hidden">
+          <label class="mp-filter">
+            <span>Form</span>
+            <select id="filter-form" aria-label="Filter by form"><option value="ALL">All</option></select>
+          </label>
+          <label class="mp-filter">
+            <span>Type</span>
+            <select id="filter-category" aria-label="Filter by type"><option value="ALL">All</option></select>
+          </label>
+          <label class="mp-filter">
+            <span>Stock</span>
+            <select id="filter-stock" aria-label="Filter by stock">
+              <option value="ALL">All</option>
+              <option value="LOW">Low stock</option>
+              <option value="OUT">Out of stock</option>
+            </select>
+          </label>
+        </div>
 
-          <!-- List Filters: Category / Form Type / Stock -->
-          <div class="mp-section-head">
-            <div><i data-lucide="list-filter" class="w-4 h-4"></i><span>Filters</span></div>
-            <button type="button" id="reset-filters-btn" data-action="resetListFilters" class="mp-reset-filters invisible">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i><span>Reset</span>
-            </button>
-          </div>
-          <div id="list-filters" class="mp-filter-grid">
-            <label class="mp-filter">
-              <span>Category</span>
-              <select id="filter-category" aria-label="Filter by category"><option value="ALL">All</option></select>
-            </label>
-            <label class="mp-filter">
-              <span>Form Type</span>
-              <select id="filter-form" aria-label="Filter by form type"><option value="ALL">All</option></select>
-            </label>
-            <label class="mp-filter">
-              <span>Stock</span>
-              <select id="filter-stock" aria-label="Filter by stock">
-                <option value="ALL">All</option>
-                <option value="LOW">Low stock</option>
-                <option value="OUT">Out of stock</option>
-              </select>
-            </label>
-          </div>
-
-          <!-- Sort & Bulk Action Toolbar -->
-          <div class="flex justify-between items-center text-xs text-slate-500 pt-0.5 px-1">
-            <div class="flex items-center space-x-2">
-              <span id="med-count-badge" class="font-medium text-slate-600">0 items found</span>
-              <button data-action="toggleBulkSelectMode" id="bulk-toggle-btn" class="text-emerald-700 hover:text-emerald-800 font-bold bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md transition flex items-center space-x-1">
-                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
-                <span id="bulk-btn-text">Select</span>
-              </button>
-            </div>
-
-            <div class="flex items-center space-x-1">
-              <span>Sort:</span>
-              <select id="sort-select" class="bg-transparent font-semibold text-emerald-700 focus:outline-none cursor-pointer">
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="recent">Recently Added</option>
-                <option value="unit-low">Tablet Price (Low to High)</option>
-                <option value="pack-low">Pack Price (Low to High)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Bulk Selection Action Bar -->
-          <div id="bulk-action-bar" class="hidden bg-slate-800 text-white rounded-xl p-2.5 flex items-center justify-between shadow-lg">
-            <div class="flex items-center space-x-2 pl-1">
-              <span id="selected-count-text" class="text-xs font-semibold text-slate-200">0 selected</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button data-action="deleteSelectedMedicines" class="min-h-[44px] bg-red-500 hover:bg-red-600 px-3 rounded-lg text-xs font-semibold text-white transition flex items-center space-x-1">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                <span>Delete Selected</span>
-              </button>
-              <button data-action="exitBulkSelectMode" class="w-11 h-11 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white" aria-label="Exit select mode">
-                <i data-lucide="x" class="w-4 h-4"></i>
-              </button>
+        <!-- Count, sort, list/grid -->
+        <div class="mp-list-bar">
+          <span id="med-count-badge">Loading...</span>
+          <div class="mp-list-tools">
+            <select id="sort-select" class="mp-select" aria-label="Sort medicines">
+              <option value="name-asc">Name A-Z</option>
+              <option value="recent">Newest first</option>
+              <option value="unit-low">Tablet price</option>
+              <option value="pack-low">Pack price</option>
+            </select>
+            <div class="mp-view-toggle" role="group" aria-label="View">
+              <button type="button" data-action="setListView" data-view="list" aria-pressed="true" aria-label="List view"><i data-lucide="list"></i></button>
+              <button type="button" data-action="setListView" data-view="grid" aria-pressed="false" aria-label="Grid view"><i data-lucide="layout-grid"></i></button>
             </div>
           </div>
         </div>
 
-        <!-- Medicine Cards Container -->
-        <div id="medicine-list" class="grid grid-cols-2 gap-2 pt-1">
-          <!-- Dynamic Cards Content -->
+        <!-- Medicine list (skeleton until the data is ready) -->
+        <div id="medicine-list" class="mp-list mp-view-list">
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:70%"></div><div class="mp-skel-line" style="width:40%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:55%"></div><div class="mp-skel-line" style="width:50%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:65%"></div><div class="mp-skel-line" style="width:35%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:50%"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:72%"></div><div class="mp-skel-line" style="width:38%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:60%"></div><div class="mp-skel-line" style="width:42%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:58%"></div><div class="mp-skel-line" style="width:48%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
+          <div class="mp-med mp-skel" aria-hidden="true">
+            <div class="mp-med-icon"></div>
+            <div class="mp-med-body"><div class="mp-skel-line" style="width:66%"></div><div class="mp-skel-line" style="width:36%;margin-top:6px"></div><div class="mp-skel-line" style="width:45%;margin-top:6px"></div></div>
+          </div>
         </div>
+        <div id="list-sentinel" aria-hidden="true"></div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="hidden text-center py-12 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 text-emerald-600">
-            <i data-lucide="package-open" class="w-8 h-8"></i>
-          </div>
-          <h3 class="text-slate-700 font-bold text-base">No Medicines Found</h3>
-          <p class="text-slate-500 text-xs mt-1 max-w-xs mx-auto">Load medical items in PKR.</p>
-          <div class="flex justify-center space-x-2 mt-4">
-            <button data-action="switchTab" data-tab="add" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md inline-flex items-center space-x-1">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>Add Product</span>
-            </button>
-          </div>
+        <!-- Empty state (text set by JS) -->
+        <div id="empty-state" class="mp-empty hidden">
+          <div class="mp-empty-icon"><i data-lucide="search-x" id="empty-icon"></i></div>
+          <h3 id="empty-title">No medicines found</h3>
+          <p id="empty-text">Try another filter or search word.</p>
+          <button type="button" id="empty-action" data-action="clearAllFilters" class="mp-btn bg-emerald-600 text-white px-5">
+            <i data-lucide="x"></i><span id="empty-action-text">Clear filters</span>
+          </button>
         </div>
 
       </section>
@@ -203,16 +215,17 @@
             <input type="text" id="med-name" required placeholder="e.g. Panadol Extra, Hydryllin, Rigix" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
 
-          <!-- Dosage Form & Category Select -->
+          <!-- Form (dosage form) & Type (medical use) -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form Type *</label>
-              <select id="med-form-type" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
-                <option value="Tablet">Tablet / Capsule</option>
-                <option value="Syrup">Syrup / Suspension</option>
-                <option value="Injection">Injection / Vial</option>
-                <option value="Suspension">Suspension</option>
+              <label for="med-form-type" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Form *</label>
+              <select id="med-form-type" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
+                <option value="Tablet">Tablet</option>
                 <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Injection">Injection</option>
+                <option value="Drops">Drops</option>
                 <option value="Cream">Cream</option>
                 <option value="Gel">Gel</option>
                 <option value="Ointment">Ointment</option>
@@ -220,42 +233,22 @@
                 <option value="Sachet">Sachet</option>
                 <option value="Powder">Powder</option>
                 <option value="Inhaler">Inhaler</option>
-                <option value="Drops">Eye/Ear Drops</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category / Tag</label>
-              <select id="med-category-select" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="TAB">Tablets</option>
-                <option value="SYRUP">Syrups</option>
-                <option value="IV">IV</option>
-                <option value="Suspension">Suspension</option>
-                <option value="Capsule">Capsule</option>
-                <option value="Cream">Cream</option>
-                <option value="Gel">Gel</option>
-                <option value="Ointment">Ointment</option>
-                <option value="Liquid">Liquid</option>
-                <option value="Sachet">Sachet</option>
-                <option value="Powder">Powder</option>
-                <option value="Inhaler">Inhaler</option>
-                <option value="Painkiller">Painkiller</option>
-                <option value="Antibiotic">Antibiotic</option>
-                <option value="Cough & Cold">Cough & Cold</option>
-                <option value="Vitamins">Vitamins</option>
-                <option value="Cardiovascular">Cardiovascular</option>
-                <option value="Diabetes">Diabetes</option>
-                <option value="Daily Dose">Daily Dose</option>
-                <option value="First Aid">First Aid</option>
-                <option value="Gastro">Gastro</option>
-                <option value="Other">Other (Custom)</option>
+              <label for="med-category-select" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Type *</label>
+              <select id="med-category-select" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="Other">Other</option>
               </select>
             </div>
           </div>
 
           <div id="custom-cat-container" class="hidden">
-            <input type="text" id="med-category-custom" placeholder="Custom Category Name" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label for="med-category-custom" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">New type name</label>
+            <input type="text" id="med-category-custom" maxlength="40" placeholder="e.g. Thyroid, Hormones" class="w-full px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
+          <p id="type-error" class="mp-inline-error" role="alert"></p>
 
           <!-- Price in PKR -->
           <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm overflow-hidden">
@@ -590,7 +583,7 @@
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
             <div id="stat-total-meds" class="text-xl font-bold text-slate-800 mt-1">0</div>
-            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Categories</span>
+            <span class="text-[10px] text-slate-500 mt-0.5" id="stat-total-categories">0 Types</span>
           </div>
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <div class="flex justify-between items-center">
@@ -697,6 +690,17 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Appearance</h4>
+          <div class="mp-segment" role="group" aria-label="Theme">
+            <button type="button" data-action="setTheme" data-theme-option="light" aria-pressed="false"><i data-lucide="sun"></i><span>Light</span></button>
+            <button type="button" data-action="setTheme" data-theme-option="dark" aria-pressed="false"><i data-lucide="moon"></i><span>Dark</span></button>
+            <button type="button" data-action="setTheme" data-theme-option="auto" aria-pressed="false"><i data-lucide="sun-moon"></i><span>Auto</span></button>
+          </div>
+          <p class="text-xs text-slate-500">Auto follows your phone's light / dark setting.</p>
         </div>
 
         <!-- Storage & Data Maintenance -->
@@ -833,14 +837,12 @@
         </div>
 
         <div class="mp-sheet-body space-y-4">
-          <div class="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 p-4">
-            <div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-100/50"></div>
-            <div class="relative text-center">
-              <div class="w-[104px] h-[104px] mx-auto rounded-[24px] p-1 bg-white shadow-lg border border-emerald-100">
-                <img id="modal-img" src="" alt="" class="w-full h-full object-cover rounded-[20px] bg-emerald-600">
-              </div>
-              <h3 id="modal-title" class="text-[24px] leading-tight font-extrabold text-slate-800 mt-3">Medicine Name</h3>
-              <p id="modal-notes" class="text-[12px] leading-5 text-slate-500 mt-1 px-3 italic">No dosage or medicine notes attached.</p>
+          <div class="mp-detail-hero">
+            <div id="modal-icon" class="mp-med-icon" aria-hidden="true"></div>
+            <div class="min-w-0">
+              <h3 id="modal-title">Medicine Name</h3>
+              <p id="modal-manufacturer"></p>
+              <p id="modal-notes"></p>
             </div>
           </div>
 
@@ -1034,6 +1036,7 @@
   <!-- Scripts: plain (non-module) files, order matters -->
   <script src="js/vendor/lucide.min.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/types.js"></script>
   <script src="js/medicines.js"></script>
   <script src="js/stock.js"></script>
   <script src="js/sales.js"></script>

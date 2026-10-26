@@ -1,4 +1,4 @@
-/* base.css: font, reset helpers, app shell layout, inputs, bottom nav */
+/* base.css: font, app shell (header, main, nav), inputs, buttons, motion */
 
 /* Inter is bundled locally (variable font) so the APK works offline. */
 @font-face {
@@ -10,94 +10,110 @@
        url('../assets/fonts/inter-latin-wght-normal.woff2') format('woff2');
 }
 
+html, body { min-height: 100%; }
+html { background: var(--mp-bg) !important; }
 body {
   font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  background: var(--mp-bg) !important;
+  color: var(--mp-ink) !important;
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-html, body { min-height: 100%; }
-body {
-  background: radial-gradient(circle at top, #e8f7f2 0%, #eef3f4 42%, #e9eef1 100%) !important;
-  color: var(--mp-ink);
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 #app-container {
   background: var(--mp-bg) !important;
-  border-color: rgba(15,118,110,.12) !important;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, .18) !important;
+  border-color: var(--mp-border) !important;
+  box-shadow: none !important;
 }
 
+/* Header: slim, flat gradient, no decorative shapes */
 #app-container > header {
-  min-height: 88px;
-  padding-top: max(16px, env(safe-area-inset-top)) !important;
-  background: linear-gradient(135deg, #047857 0%, #0f766e 58%, #115e59 100%) !important;
-  box-shadow: 0 8px 24px rgba(4,120,87,.18) !important;
-  position: relative;
-  overflow: hidden;
+  min-height: var(--mp-header-h);
+  padding: max(8px, env(safe-area-inset-top)) var(--sp-4) 8px !important;
+  background: var(--mp-header) !important;
+  box-shadow: none !important;
 }
-#app-container > header::after {
-  content: '';
-  position: absolute;
-  width: 150px; height: 150px;
-  right: -55px; top: -75px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.08);
-  pointer-events: none;
-}
-#app-container > header h1 { font-size: 21px !important; letter-spacing: -.035em !important; }
-#app-container > header p { font-size: 12px !important; opacity: .9; }
+#app-container > header h1 { font-size: 20px !important; letter-spacing: -.02em !important; line-height: 1.2; }
+#app-container > header p { font-size: 12px !important; opacity: .9; margin-top: 0 !important; }
 #header-profile-btn {
   width: 44px; height: 44px;
-  border-radius: 14px !important;
-  background: rgba(255,255,255,.12) !important;
-  border-color: rgba(255,255,255,.18) !important;
-  backdrop-filter: blur(8px);
-  position: relative; z-index: 2;
+  border-radius: var(--mp-radius-sm) !important;
+  background: rgba(255, 255, 255, .14) !important;
+  border-color: rgba(255, 255, 255, .2) !important;
 }
 
 main {
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
+  padding-top: 0 !important;
 }
 
-main > section { animation: mpFade .22s ease-out; }
-@keyframes mpFade { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+/* Tab change: short fade/slide (transform + opacity only) */
+main > section { animation: mpFade .2s ease-out; }
+@keyframes mpFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#screen-add, #screen-calc, #screen-stats, #screen-profile { padding-top: var(--sp-4); }
 
-/* Inputs: larger touch targets + consistent focus state */
+/* Inputs: 16px text (no zoom on focus), consistent focus ring */
 input, select, textarea, button { font-family: inherit; }
-input, select, textarea { font-size: 16px !important; }
+input, select, textarea { font-size: 16px !important; color: var(--mp-ink); }
+input::placeholder, textarea::placeholder { color: var(--mp-muted); opacity: .85; }
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(5,150,105,.65) !important;
-  box-shadow: 0 0 0 4px rgba(16,185,129,.10) !important;
+  border-color: var(--mp-green) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .18) !important;
+  outline: none;
 }
-button { -webkit-tap-highlight-color: transparent; }
-button:active { transform: translateY(1px); }
+
+/* Every button / tappable item has a visible pressed state */
+button, [role="button"], label[for] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+button { transition: transform .12s ease, background-color .15s ease, color .15s ease, opacity .15s ease; }
+button:active:not(:disabled), [role="button"]:active { transform: scale(.97); }
+button:focus-visible, [role="button"]:focus-visible, a:focus-visible, select:focus-visible {
+  outline: 2px solid var(--mp-green);
+  outline-offset: 2px;
+}
 
 /* Bottom navigation */
 #app-container > nav {
   min-height: 68px;
   padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-  padding-top: 8px !important;
-  background: rgba(255,255,255,.94) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 -8px 28px rgba(15,23,42,.08);
-  border-top-color: rgba(226,232,240,.9) !important;
+  padding-top: 6px !important;
+  background: var(--mp-nav-bg) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 -1px 0 var(--mp-border);
+  border-top-color: var(--mp-border) !important;
 }
-#app-container > nav button { min-width: 54px; min-height: 46px; }
-#app-container > nav button span { font-weight: 700; }
-#app-container > nav button > div {
-  box-shadow: 0 8px 18px rgba(5,150,105,.28) !important;
+#app-container > nav button { min-width: 56px; min-height: 48px; border-radius: var(--mp-radius-sm); }
+#app-container > nav button span { font-weight: 700; font-size: 12px !important; }
+#app-container > nav button:not(#nav-add).text-slate-400 { color: var(--mp-muted) !important; }
+#app-container > nav button.text-emerald-600 { color: var(--mp-brand-text) !important; }
+#app-container > nav button > div { box-shadow: 0 6px 14px rgba(5, 150, 105, .3) !important; border-color: var(--mp-surface) !important; }
+
+/* Toast slides in from the top */
+#toast {
+  background: var(--mp-ink) !important;
+  color: var(--mp-surface) !important;
+  font-size: 14px !important;
+  max-width: calc(100% - 32px);
+  top: calc(8px + env(safe-area-inset-top, 0px)) !important;
 }
+#toast:not(.hidden) { animation: mpToastIn .25s ease-out; }
+@keyframes mpToastIn { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 @media (min-width: 768px) {
-  #app-container { max-width: 470px; }
+  #app-container { max-width: 470px; box-shadow: var(--mp-shadow-pop) !important; }
   #app-container > nav { border-radius: 0 0 24px 24px; }
+}
+
+/* Respect "reduce motion" */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

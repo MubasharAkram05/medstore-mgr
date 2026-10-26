@@ -1,14 +1,72 @@
-/* variables.css: brand colors and theme tokens */
+/* variables.css: design tokens (colors, spacing, radius, shadows) for light and dark */
 
 :root {
+  /* Brand */
   --mp-green: #059669;
   --mp-green-dark: #047857;
   --mp-teal: #0f766e;
-  --mp-ink: #172033;
-  --mp-muted: #64748b;
-  --mp-border: #e2e8f0;
-  --mp-surface: #ffffff;
-  --mp-bg: #f5f8f7;
+  --mp-on-brand: #ffffff;
+
+  /* Surfaces and text (light) */
+  --mp-bg: #f3f6f5;            /* app background */
+  --mp-surface: #ffffff;       /* cards, sheets */
+  --mp-surface-2: #f6f8f8;     /* inputs, subtle blocks */
+  --mp-ink: #14211f;           /* main text */
+  --mp-ink-2: #3c4b49;         /* secondary text */
+  --mp-muted: #61706e;         /* helper text (AA on white) */
+  --mp-border: #e1e8e6;
+  --mp-border-strong: #c9d4d1;
+  --mp-brand-soft: #e7f7f0;    /* soft emerald fill */
+  --mp-brand-text: #047857;    /* emerald text on light */
+  --mp-header: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+  --mp-nav-bg: rgba(255, 255, 255, .96);
+  --mp-backdrop: rgba(15, 23, 42, .55);
+
+  /* Status */
+  --mp-ok-bg: #e7f7ef;   --mp-ok-fg: #08714f;
+  --mp-warn-bg: #fff4d6; --mp-warn-fg: #8a5300;
+  --mp-bad-bg: #fde8e8;  --mp-bad-fg: #b42318;
+  --mp-none-bg: #eef1f1; --mp-none-fg: #55615f;
+
+  /* Shape and depth */
+  --mp-radius: 16px;
+  --mp-radius-sm: 12px;
+  --mp-shadow-card: 0 1px 2px rgba(16, 24, 22, .05), 0 4px 12px rgba(16, 24, 22, .05);
+  --mp-shadow-pop: 0 16px 40px rgba(16, 24, 22, .18);
+
+  /* Spacing scale: 4 / 8 / 12 / 16 / 24 */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
+
+  /* Layout */
+  --mp-header-h: calc(60px + env(safe-area-inset-top, 0px));
   /* Bottom nav height incl. phone safe area (sticky Save bar sits above it) */
   --mp-nav-h: calc(68px + env(safe-area-inset-bottom, 0px));
+
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --mp-bg: #0b1412;
+  --mp-surface: #13201d;
+  --mp-surface-2: #1a2a26;
+  --mp-ink: #e8f0ee;
+  --mp-ink-2: #c3d0cd;
+  --mp-muted: #98a8a4;
+  --mp-border: #263733;
+  --mp-border-strong: #344843;
+  --mp-brand-soft: #123a2f;
+  --mp-brand-text: #5fd3a6;
+  --mp-header: linear-gradient(135deg, #064e3b 0%, #0b3b37 100%);
+  --mp-nav-bg: rgba(19, 32, 29, .96);
+  --mp-backdrop: rgba(0, 0, 0, .65);
+
+  --mp-ok-bg: #12382b;   --mp-ok-fg: #7ee2b5;
+  --mp-warn-bg: #3a2c0c; --mp-warn-fg: #f5c45a;
+  --mp-bad-bg: #3d1717;  --mp-bad-fg: #ff9b8f;
+  --mp-none-bg: #22302d; --mp-none-fg: #a9b8b4;
+
+  --mp-shadow-card: 0 1px 2px rgba(0, 0, 0, .35);
+  --mp-shadow-pop: 0 16px 40px rgba(0, 0, 0, .55);
+
+  color-scheme: dark;
 }

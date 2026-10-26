@@ -7,9 +7,6 @@ const CLICK_ACTIONS = {
   switchTab: el => switchTab(el.dataset.tab),
   cancelForm: () => { resetForm(); switchTab(tabBeforeAdd || 'home'); },
   clearSearch: () => clearSearch(),
-  toggleBulkSelectMode: () => toggleBulkSelectMode(),
-  deleteSelectedMedicines: () => deleteSelectedMedicines(),
-  exitBulkSelectMode: () => exitBulkSelectMode(),
   removeImage: () => removeImage(),
   resetCalculator: () => resetCalculator(),
   clearCalcSearch: () => clearCalcSearch(),
@@ -33,8 +30,12 @@ const CLICK_ACTIONS = {
   saveRestock: () => saveRestock(),
   deleteSale: el => deleteSale(el.dataset.id),
   editMedicine: el => editMedicine(el.dataset.id),
+  deleteMedicine: el => deleteMedicine(el.dataset.id),
+  toggleFilters: () => toggleFilters(),
+  clearAllFilters: () => clearAllFilters(),
+  setListView: el => setListView(el.dataset.view),
+  setTheme: el => setThemeSetting(el.dataset.themeOption),
   openDetailsModal: el => openDetailsModal(el.dataset.id),
-  openCardCalculator: el => openCardCalculator(el.dataset.id),
   selectCalcMedicine: el => selectCalcMedicine(el.dataset.id)
 };
 
@@ -51,14 +52,22 @@ function bindEvents() {
     if (action) action(el);
   });
 
-  // Bulk-select checkboxes on medicine cards
-  document.addEventListener('change', e => {
-    const el = e.target.closest('[data-action="toggleSelectMed"]');
-    if (el) toggleSelectMed(el.dataset.id, el.checked);
+  // Medicine cards are role="button": Enter / Space open them like a tap
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-action]')) {
+      e.preventDefault();
+      e.target.click();
+    }
   });
 
-  // Home: search, filters, sort, bulk select
-  on('search-input', 'input', handleSearchFilter);
+  // Home: search, filters, sort
+  // Search: X button updates at once, the list re-renders 200ms after typing stops
+  let searchTimer = null;
+  on('search-input', 'input', () => {
+    updateClearSearchButton();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderMedicineList, 200);
+  });
   on('filter-category', 'change', e => setListFilter('category', e.target.value));
   on('filter-form', 'change', e => setListFilter('form', e.target.value));
   on('filter-stock', 'change', e => setListFilter('stock', e.target.value));
@@ -133,9 +142,11 @@ bindEvents();
 
 window.addEventListener('load', () => {
   listFilters = readListFilters();
+  listView = readListView();
   loadLocalStorage();
   loadUserProfile();
   populateEditMedicinePlaces('');
+  populateTypeSelect('Other');
   updateFormTypeLabels();
   renderListFilters();
   renderMedicineList();
@@ -143,4 +154,5 @@ window.addEventListener('load', () => {
   updateStatsScreen();
   calculateStorageUsage();
   lucide.createIcons();
+  applyTheme(); // marks the active Light / Dark / Auto button in Profile
 });
