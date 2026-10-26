@@ -31,9 +31,11 @@ const CLICK_ACTIONS = {
   deleteSale: el => deleteSale(el.dataset.id),
   editMedicine: el => editMedicine(el.dataset.id),
   deleteMedicine: el => deleteMedicine(el.dataset.id),
-  openCardMenu: el => openCardMenu(el),
+  toggleFilters: () => toggleFilters(),
+  clearAllFilters: () => clearAllFilters(),
+  setListView: el => setListView(el.dataset.view),
+  setTheme: el => setThemeSetting(el.dataset.themeOption),
   openDetailsModal: el => openDetailsModal(el.dataset.id),
-  openCardCalculator: el => openCardCalculator(el.dataset.id),
   selectCalcMedicine: el => selectCalcMedicine(el.dataset.id)
 };
 
@@ -45,19 +47,27 @@ function on(id, event, handler) {
 function bindEvents() {
   document.addEventListener('click', e => {
     const el = e.target.closest('[data-action]');
-    // Any tap outside the card menu closes it (the menu button toggles it itself)
-    if (!el || el.dataset.action !== 'openCardMenu') closeCardMenu();
     if (!el) return;
     const action = CLICK_ACTIONS[el.dataset.action];
     if (action) action(el);
   });
 
-  // Card menu: close on Escape or when the list scrolls
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCardMenu(); });
-  document.querySelector('main').addEventListener('scroll', closeCardMenuOnScroll, { passive: true });
+  // Medicine cards are role="button": Enter / Space open them like a tap
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-action]')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
 
   // Home: search, filters, sort
-  on('search-input', 'input', handleSearchFilter);
+  // Search: X button updates at once, the list re-renders 200ms after typing stops
+  let searchTimer = null;
+  on('search-input', 'input', () => {
+    updateClearSearchButton();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderMedicineList, 200);
+  });
   on('filter-category', 'change', e => setListFilter('category', e.target.value));
   on('filter-form', 'change', e => setListFilter('form', e.target.value));
   on('filter-stock', 'change', e => setListFilter('stock', e.target.value));
@@ -132,6 +142,7 @@ bindEvents();
 
 window.addEventListener('load', () => {
   listFilters = readListFilters();
+  listView = readListView();
   loadLocalStorage();
   loadUserProfile();
   populateEditMedicinePlaces('');
@@ -143,4 +154,5 @@ window.addEventListener('load', () => {
   updateStatsScreen();
   calculateStorageUsage();
   lucide.createIcons();
+  applyTheme(); // marks the active Light / Dark / Auto button in Profile
 });

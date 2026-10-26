@@ -399,18 +399,9 @@ function recordSaleFromCalc() {
   if (!error) updateCalcDetails();
 }
 
-// "Calculator" button on a medicine card
-function openCardCalculator(id) {
-  switchTab('calc');
-  // selectCalcMedicine() works for any medicine, not only the first 100 in the dropdown
-  setTimeout(() => selectCalcMedicine(id), 80);
-}
-
+// Details popup "Calculator" button. selectCalcMedicine() works for any medicine;
+// setting the dropdown value only worked for the first 100 (others showed the wrong one).
 function openCalcModal(id) {
   switchTab('calc');
-  const select = document.getElementById('calc-med-select');
-  if (select) {
-    select.value = id;
-    updateCalcDetails();
-  }
+  selectCalcMedicine(id);
 }

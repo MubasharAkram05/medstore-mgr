@@ -1,0 +1,96 @@
+/* dark.css: dark theme for the screens built with Tailwind color classes
+   (Add/Edit, Calculator, Stats, Profile, popups). Loaded last. Only active when
+   <html data-theme="dark"> (set by js/theme.js: Light / Dark / Auto). */
+
+html[data-theme="dark"] body { color: var(--mp-ink) !important; }
+
+/* Surfaces */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .focus\:bg-white:focus { background-color: var(--mp-surface) !important; }
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] .hover\:bg-slate-50:hover,
+html[data-theme="dark"] .hover\:bg-slate-100:hover { background-color: var(--mp-surface-2) !important; }
+html[data-theme="dark"] .bg-slate-200,
+html[data-theme="dark"] .hover\:bg-slate-200:hover { background-color: var(--mp-border-strong) !important; }
+html[data-theme="dark"] .via-white { --tw-gradient-via: var(--mp-surface) !important; }
+html[data-theme="dark"] .to-white { --tw-gradient-to: var(--mp-surface) !important; }
+
+/* Soft colored blocks */
+html[data-theme="dark"] .bg-emerald-50,
+html[data-theme="dark"] .bg-emerald-50\/60,
+html[data-theme="dark"] .bg-emerald-50\/70,
+html[data-theme="dark"] .bg-emerald-100,
+html[data-theme="dark"] .bg-emerald-100\/50,
+html[data-theme="dark"] .hover\:bg-emerald-50:hover,
+html[data-theme="dark"] .from-emerald-50 { background-color: var(--mp-brand-soft) !important; --tw-gradient-from: var(--mp-brand-soft) !important; }
+html[data-theme="dark"] .bg-gradient-to-br.from-emerald-50 { background-image: none !important; }
+html[data-theme="dark"] .bg-teal-50,
+html[data-theme="dark"] .bg-teal-50\/70,
+html[data-theme="dark"] .to-teal-50 { background-color: #10302d !important; --tw-gradient-to: #10302d !important; }
+html[data-theme="dark"] .bg-amber-50,
+html[data-theme="dark"] .bg-amber-50\/70,
+html[data-theme="dark"] .bg-amber-100,
+html[data-theme="dark"] .hover\:bg-amber-100:hover { background-color: var(--mp-warn-bg) !important; }
+html[data-theme="dark"] .bg-red-50,
+html[data-theme="dark"] .hover\:bg-red-50:hover,
+html[data-theme="dark"] .hover\:bg-red-100:hover { background-color: var(--mp-bad-bg) !important; }
+html[data-theme="dark"] .bg-purple-100 { background-color: #2a2147 !important; }
+html[data-theme="dark"] .bg-cyan-100 { background-color: #0f3340 !important; }
+html[data-theme="dark"] .bg-blue-100 { background-color: #152c4a !important; }
+
+/* Text */
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-slate-700 { color: var(--mp-ink) !important; }
+html[data-theme="dark"] .text-slate-600,
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .hover\:text-slate-600:hover { color: var(--mp-ink-2) !important; }
+html[data-theme="dark"] .text-slate-400,
+html[data-theme="dark"] .text-slate-300 { color: var(--mp-muted) !important; }
+html[data-theme="dark"] .text-emerald-600,
+html[data-theme="dark"] .text-emerald-700,
+html[data-theme="dark"] .text-emerald-800,
+html[data-theme="dark"] .text-emerald-700\/70,
+html[data-theme="dark"] .hover\:text-emerald-600:hover,
+html[data-theme="dark"] .hover\:text-emerald-700:hover { color: var(--mp-brand-text) !important; }
+html[data-theme="dark"] .text-teal-600,
+html[data-theme="dark"] .text-teal-700 { color: #5eead4 !important; }
+html[data-theme="dark"] .text-amber-600,
+html[data-theme="dark"] .text-amber-700,
+html[data-theme="dark"] .text-amber-800,
+html[data-theme="dark"] .text-amber-700\/70,
+html[data-theme="dark"] .text-amber-700\/80 { color: var(--mp-warn-fg) !important; }
+html[data-theme="dark"] .text-red-500,
+html[data-theme="dark"] .text-red-600,
+html[data-theme="dark"] .text-red-700,
+html[data-theme="dark"] .text-red-700\/80,
+html[data-theme="dark"] .hover\:text-red-600:hover,
+html[data-theme="dark"] .hover\:text-red-700:hover { color: var(--mp-bad-fg) !important; }
+html[data-theme="dark"] .text-purple-800 { color: #c4b5fd !important; }
+html[data-theme="dark"] .text-cyan-800 { color: #7dd3fc !important; }
+html[data-theme="dark"] .text-blue-800 { color: #93c5fd !important; }
+
+/* Borders */
+html[data-theme="dark"] .border-slate-100,
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-200\/70,
+html[data-theme="dark"] .border-emerald-100,
+html[data-theme="dark"] .border-teal-100 { border-color: var(--mp-border) !important; }
+html[data-theme="dark"] .border-slate-300,
+html[data-theme="dark"] .border-emerald-200,
+html[data-theme="dark"] .border-amber-200,
+html[data-theme="dark"] .border-red-200 { border-color: var(--mp-border-strong) !important; }
+html[data-theme="dark"] .border-white { border-color: var(--mp-surface) !important; }
+
+/* Inputs, selects, textareas everywhere */
+html[data-theme="dark"] input:not([type=checkbox]):not([type=radio]):not([type=file]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea { background-color: var(--mp-surface-2) !important; color: var(--mp-ink) !important; border-color: var(--mp-border-strong) !important; }
+html[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator { filter: invert(.85); }
+html[data-theme="dark"] option, html[data-theme="dark"] optgroup { background: var(--mp-surface); color: var(--mp-ink); }
+
+/* Calculator result box keeps contrast */
+html[data-theme="dark"] #calc-unit-price, html[data-theme="dark"] #calc-total-result { color: var(--mp-brand-text) !important; }
+
+/* Profile cover band: flatter in dark */
+html[data-theme="dark"] #screen-profile .bg-gradient-to-r { background-image: var(--mp-header) !important; }

@@ -8,6 +8,8 @@ let salesHistory = [];
 let purchases = [];
 // Home list filters (saved under STORAGE_KEYS.listFilters)
 let listFilters = { category: 'ALL', form: 'ALL', stock: 'ALL' };
+// Home list layout: 'list' (1 per row) or 'grid' (2 columns)
+let listView = 'list';
 let currentImageData = '';
 let activeTab = 'home';
 let currentSellMed = null;
@@ -35,7 +37,9 @@ const STORAGE_KEYS = {
   // New in v1.2
   customTypes: 'medstore_custom_types',
   formTypeMigrated: 'medstore_migrated_form_type_v1',
-  preFormTypeBackup: 'medstore_backup_before_form_type'
+  preFormTypeBackup: 'medstore_backup_before_form_type',
+  // New in v1.3
+  listView: 'medstore_list_view'
 };
 
 function saveToLocalStorage() {
@@ -263,4 +267,17 @@ function saveCustomTypes(list) {
     if (t && !TYPES.includes(t) && !clean.some(c => textKey(c) === textKey(t))) clean.push(t);
   });
   try { localStorage.setItem(STORAGE_KEYS.customTypes, JSON.stringify(clean)); } catch (e) {}
+}
+
+// List / Grid choice. Default: list on phones, grid on wider screens.
+function readListView() {
+  try {
+    const v = localStorage.getItem(STORAGE_KEYS.listView);
+    if (v === 'list' || v === 'grid') return v;
+  } catch (e) {}
+  return window.innerWidth >= 768 ? 'grid' : 'list';
+}
+
+function writeListView(view) {
+  try { localStorage.setItem(STORAGE_KEYS.listView, view); } catch (e) {}
 }
